@@ -8,7 +8,7 @@ import sys
 import json
 from twitter import Twitter, OAuth, TwitterHTTPError, TwitterStream
 import os 
-os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars $SPARK_HOME/jars/spark-streaming-kafka-0-8-assembly_2.11.jar pyspark-shell'
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--mastern yarn --jars $SPARK_HOME/jars/spark-streaming-kafka-0-8-assembly_2.11.jar pyspark-shell'
 
 def read_credentials():
     file_name = "/home/garzoncristianc/credentials.json"
@@ -20,8 +20,8 @@ def read_credentials():
         return None
 
 def producer1():
-    sc = SparkContext(appName="Project2")
-    ssc = StreamingContext(sc, 600)
+    sc = SparkContext(appName="ProducerTrump")
+    ssc = StreamingContext(sc, 180)
     kvs = KafkaUtils.createDirectStream(ssc, ["test"], {"metadata.broker.list": "localhost:9092"})
     kvs.foreachRDD(send)
     producer.flush()
@@ -32,9 +32,9 @@ def send(message):
     iterator = twitter_stream.statuses.sample()
     count=0
     for tweet in iterator:
-        producer.send('pointab', bytes(json.dumps(tweet, indent=6), "ascii"))
+        producer.send('thstweets', bytes(json.dumps(tweet, indent=6), "ascii"))
         count+=1
-        if(count==100000):
+        if(count==20000):
             break
      
 if __name__ == "__main__":
