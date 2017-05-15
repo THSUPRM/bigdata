@@ -19,7 +19,7 @@ def getSparkSessionInstance(sparkConf):
     return globals()['sparkSessionSingletonInstance']
 
 def consumer():
-    context = StreamingContext(sc, 10)
+    context = StreamingContext(sc, 20)
     dStream = KafkaUtils.createDirectStream(context, ["thstweets"], {"metadata.broker.list": "localhost:9092"})
     dStream.foreachRDD(p2)
     #dStream.foreachRDD(lambda rdd: rdd.foreach(p2))
@@ -72,5 +72,5 @@ def insertText(records, spark, time):
 
 if __name__ == "__main__":
     print("Starting to read tweets")
-    sc = SparkContext(appName="ConsumerComplete")
+    sc = SparkContext(appName="ConsumerTHS")
     consumer()
