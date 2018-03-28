@@ -74,3 +74,4 @@ if __name__ == "__main__":
     print("Starting to read tweets")
     sc = SparkContext(appName="ConsumerTHS")
     consumer()
+    print("Test !!!")
