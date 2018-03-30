@@ -193,3 +193,26 @@ class TweetSentiment2LSTM2Dense(TweetSentiment2LSTM):
         X = Activation("sigmoid", name="SIGMOID_1")(X)
         # create the model
         self.model = Model(input=sentence_input, output=X)
+
+
+class TweetSentiment2LSTMMaxDense(TweetSentiment2LSTM):
+    def __init__(self, max_sentence_len, embedding_builder):
+        super().__init__(max_sentence_len, embedding_builder)
+
+    def build(self, first_layer_units = 128, first_layer_dropout=0.3, second_layer_units = 128,
+              second_layer_dropout = 0.5, third_layer_units = 128, third_layer_dropout = 0.5,
+              relu_dense_layer = 30, dense_layer_units = 1):
+        # Input Layer
+        sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT")
+        # Embedding layer
+        embeddings_layer = self.pretrained_embedding_layer()
+        embeddings = embeddings_layer(sentence_input)
+        X = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(embeddings)
+        X = Dropout(first_layer_dropout, name="DROPOUT_1")(X)
+        X = Dense(60, kernel_initializer='normal',  activation='relu')(X)
+        X = LSTM(second_layer_units, return_sequences=False, name="LSTM_2")(X)
+        X = Dropout(second_layer_dropout, name="DROPOUT_2")(X)
+        X = Dense(relu_dense_layer, activation='relu')(X)
+        X = Dense(dense_layer_units)(X)
+        X = Activation("sigmoid", name="SIGMOID_1")(X)
+        self.model = Model(input=sentence_input, output=X)

@@ -9,4 +9,3 @@ def main():
 #joderme
 if __name__ == "__main__":
     main()
-    print("Test")

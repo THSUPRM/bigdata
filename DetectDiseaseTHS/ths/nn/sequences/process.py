@@ -1,4 +1,4 @@
-from ths.nn.sequences.tweets import TweetSentiment2LSTM, TweetSentiment3LSTM, TweetSentiment2LSTM2Dense
+from ths.nn.sequences.tweets import *
 from ths.utils.files import GloveEmbedding
 from ths.utils.sentences import SentenceToIndices, SentenceToEmbedding, PadSentences
 from keras import backend as KerasBack
@@ -143,7 +143,8 @@ class ProcessTweetsGloveOnePass:
         X_train = np.array(X_train_pad)
         Y_train = np.array(Y_train)
         print("Train data convert to numpy arrays")
-        NN = TweetSentiment2LSTM2Dense(max_len, G)
+        #NN = TweetSentiment2LSTM2Dense(max_len, G)
+        NN = TweetSentiment2LSTMMaxDense(max_len, G)
         print("model created")
         NN.build(first_layer_units = 128, dense_layer_units=1, first_layer_dropout=0, second_layer_dropout=0)
         print("model built")
