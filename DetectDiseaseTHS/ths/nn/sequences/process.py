@@ -167,7 +167,7 @@ class ProcessTweetsGloveOnePass:
         # loss, acc = NN.evaluate(X_test, Y_test, callbacks=[callback])
         # print("accuracy: ", acc)
         T = "I have a bad case of vomit"
-        X_Predict = ["my zika is so bad", "i love colombia", "my has been tested for ebola", "there is a diarrhea outbreak in the city"]
+        X_Predict = ["my zika is so bad but i am so happy", "i love colombia", "my has been tested for ebola", "there is a diarrhea outbreak in the city"]
         X_Predict_Idx, max_len2 = S.map_sentence_list(X_Predict)
         i =0
         for s in X_Predict_Idx:
