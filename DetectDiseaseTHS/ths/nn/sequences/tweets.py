@@ -207,8 +207,8 @@ class TweetSentiment2LSTMMaxDense(TweetSentiment2LSTM):
         # Embedding layer
         embeddings_layer = self.pretrained_embedding_layer()
         embeddings = embeddings_layer(sentence_input)
-        #X = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(embeddings)
-        X = Bidirectional(LSTM(first_layer_units, return_sequences=True, name='LSTM_1'))(embeddings)
+        X = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(embeddings)
+        #X = Bidirectional(LSTM(first_layer_units, return_sequences=True, name='LSTM_1'))(embeddings)
         X = Dropout(first_layer_dropout, name="DROPOUT_1")(X)
         X = Dense(60, kernel_initializer='normal',  activation='relu')(X)
         X = LSTM(second_layer_units, return_sequences=False, name="LSTM_2")(X)
