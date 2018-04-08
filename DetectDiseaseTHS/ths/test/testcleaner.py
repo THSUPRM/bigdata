@@ -2,13 +2,13 @@ from ths.utils.cleaner import TweetCleaner
 import csv
 
 def main():
-    input_name = "textlabels.csv"
-    output_name = "cleantextlabels.csv"
+    input_name = "data/textlabels2.csv"
+    output_name = "data/cleantextlabels2.csv"
     C = TweetCleaner(input_name=input_name, output_name=output_name)
     C.clean()
     print("Done")
 
-    with open("cleantextlabels.csv", "r", encoding="ISO-8859-1") as f:
+    with open(output_name, "r", encoding="ISO-8859-1") as f:
         reader = csv.reader(f, delimiter = ',')
         max_len = 0
         max_sent = None

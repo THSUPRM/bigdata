@@ -20,13 +20,12 @@ class TweetCleaner:
 
                     tweet = row[0]
                     label = row[1]
-                    print("row: ", tweet)
+                    # print("row: ", tweet)
                     # first make it lower case
                     tweet = tweet.lower()
                     # second remove http and https with web link
                     # tweet = re.sub(r'http\S+', 'link', tweet)
                     tweet = re.sub(r'http\S+', '', tweet)
-
                     # third remove #hashtag with hash tag
                     # tweet = re.sub(r'#\S+', 'hastag', tweet)
                     tweet = re.sub(r'#\S+', '', tweet)
@@ -37,12 +36,13 @@ class TweetCleaner:
                     tweet = expandContractions(tweet)
                     # sixth remove punction marks
                     translator = str.maketrans('', '', string.punctuation)
-
                     tweet = tweet.translate(translator)
+
+                    tweet = tweet.strip()
                     out = []
                     out.append(tweet)
                     out.append(label)
-                    print(i)
+                    #print(i)
                     i = i  + 1
                     writer.writerow(out)
 
