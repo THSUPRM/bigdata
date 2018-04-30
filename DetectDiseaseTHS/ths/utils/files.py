@@ -6,7 +6,7 @@ class EmbeddingException(Exception):
     pass
 
 class GloveEmbedding:
-    def __init__(self, filename, dimensions =50):
+    def __init__(self, filename, dimensions = 50):
         if not filename :
             raise Exception("Illegal file name.")
         if dimensions < 1:

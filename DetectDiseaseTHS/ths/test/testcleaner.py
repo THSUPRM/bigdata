@@ -2,8 +2,8 @@ from ths.utils.cleaner import TweetCleaner
 import csv
 
 def main():
-    input_name = "data/textlabels2.csv"
-    output_name = "data/cleantextlabels2.csv"
+    input_name = "data/textlabels3.csv"
+    output_name = "data/cleantextlabels3.csv"
     C = TweetCleaner(input_name=input_name, output_name=output_name)
     C.clean()
     print("Done")

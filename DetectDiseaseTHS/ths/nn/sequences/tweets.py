@@ -1,11 +1,9 @@
 import numpy as np
 np.random.seed(10)
-from ths.utils.sentences import SentenceToEmbedding
 
 from keras.models import Model
-from keras.layers import Dense, Input, Dropout, LSTM, Activation, Bidirectional
-from keras.layers.embeddings import Embedding
-from keras.regularizers import l2
+from keras.models import Sequential
+from keras.layers import Dense, Input, Dropout, LSTM, Activation, Bidirectional, BatchNormalization, Embedding
 
 np.random.seed(1)
 
@@ -14,7 +12,7 @@ class TweetSentiment2LSTM:
     def __init__(self, max_sentence_len, embedding_builder):
         self.max_sentence_len = max_sentence_len
         self.embedding_builder = embedding_builder
-        self.model = None
+        self.model = Model
         self.sentiment_map = {0 : 'negative', 1 : 'positive', 2: 'neutral'}
 
     def build(self, first_layer_units = 128, first_layer_dropout=0.5, second_layer_units = 128,
@@ -199,21 +197,46 @@ class TweetSentiment2LSTMMaxDense(TweetSentiment2LSTM):
     def __init__(self, max_sentence_len, embedding_builder):
         super().__init__(max_sentence_len, embedding_builder)
 
-    def build(self, first_layer_units = 128, first_layer_dropout=0.3, second_layer_units = 128,
-              second_layer_dropout = 0.5, third_layer_units = 128, third_layer_dropout = 0.5,
-              relu_dense_layer = 30, dense_layer_units = 1):
+    def build(self, first_layer_units = 128, first_layer_dropout=0.5, second_layer_units = 128,
+              second_layer_dropout = 0.5, relu_dense_layer = 64, dense_layer_units = 3, l2=None):
         # Input Layer
         sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT")
         # Embedding layer
         embeddings_layer = self.pretrained_embedding_layer()
         embeddings = embeddings_layer(sentence_input)
-        X = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(embeddings)
-        #X = Bidirectional(LSTM(first_layer_units, return_sequences=True, name='LSTM_1'))(embeddings)
+        # X = LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2, recurrent_dropout=0.4)(embeddings)
+        X = Bidirectional(LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2, recurrent_dropout=0.4))(embeddings)
         X = Dropout(first_layer_dropout, name="DROPOUT_1")(X)
-        X = Dense(60, kernel_initializer='normal',  activation='relu')(X)
-        X = LSTM(second_layer_units, return_sequences=False, name="LSTM_2")(X)
+        X = Dense(200, activation='relu', kernel_regularizer=l2)(X)
+        X = LSTM(second_layer_units, return_sequences=False, name="LSTM_2", kernel_regularizer=l2)(X)
         X = Dropout(second_layer_dropout, name="DROPOUT_2")(X)
-        X = Dense(relu_dense_layer, activation='relu')(X)
+        X = Dense(relu_dense_layer, activation='relu', kernel_regularizer=l2)(X)
         X = Dense(dense_layer_units)(X)
-        X = Activation("sigmoid", name="SIGMOID_1")(X)
+        # X = BatchNormalization()(X)
+        X = Activation("softmax", name="softmax_final")(X)
         self.model = Model(input=sentence_input, output=X)
+
+class TweetSentiment2LSTMMaxDenseSequential(TweetSentiment2LSTM):
+    def __init__(self, max_sentence_len, embedding_builder):
+        super().__init__(max_sentence_len, embedding_builder)
+
+    def build(self, first_layer_units = 128, first_layer_dropout=0.5, second_layer_units = 128,
+              second_layer_dropout = 0.5, relu_dense_layer = 64, dense_layer_units = 3, l2=None):
+        # Input Layer
+        sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT")
+        # Embedding layer
+        embeddings_layer = self.pretrained_embedding_layer()
+        embeddings = embeddings_layer(sentence_input)
+
+        model = Sequential()
+        model.add(embeddings)
+        model.add(LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2, recurrent_dropout=0.4))
+        model.add(Dropout(first_layer_dropout, name="DROPOUT_1"))
+        model.add(Dense(200, activation='relu', kernel_regularizer=l2))
+        model.add(LSTM(second_layer_units, return_sequences=False, name="LSTM_2", kernel_regularizer=l2))
+        model.add(Dropout(second_layer_dropout, name="DROPOUT_2"))
+        model.add(Dense(relu_dense_layer, activation='relu', kernel_regularizer=l2))
+        model.add(Dense(dense_layer_units))
+        model.add(Activation("softmax", name="softmax_final"))
+
+        self.model = model
