@@ -4,6 +4,9 @@ np.random.seed(10)
 from keras.models import Model
 from keras.models import Sequential
 from keras.layers import Dense, Input, Dropout, LSTM, Activation, Bidirectional, BatchNormalization, Embedding
+from keras.optimizers import RMSprop
+from keras.regularizers import l2
+from datetime import datetime
 
 np.random.seed(1)
 
@@ -21,14 +24,14 @@ class TweetSentiment2LSTM:
         # Input Layer
         sentence_input = Input(shape = (self.max_sentence_len,), name="INPUT")
         # Embedding layer
-        embeddings_layer = self.pretrained_embedding_layer()
-        embeddings = embeddings_layer(sentence_input)
+        input_layer = self.pretrained_embedding_layer()
+        input = input_layer(sentence_input)
         # First LSTM Layer
-        #X  = LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2(0.1))(embeddings)
-        X  = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(embeddings)
+        #X  = LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2(0.1))(input)
+        X  = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(input)
 
         # Dropout regularization
-        X = Dropout(first_layer_dropout, name="DROPOUT_1") (X)
+        X = Dropout(first_layer_dropout, name="dropout") (X)
         # Second LSTM Layer
        # X  = LSTM(second_layer_units, return_sequences=False, name="LSTM_2", kernel_regularizer=l2(0.1))(X)
         # Second Layer Dropout
@@ -44,16 +47,32 @@ class TweetSentiment2LSTM:
 
     def pretrained_embedding_layer(self):
         # create Keras embedding layer
-        word_to_idx, idx_to_word, word_embeddings = self.embedding_builder.read_embedding()
+        word_to_idx, idx_to_word, word_input = self.embedding_builder.read_embedding()
         #vocabulary_len = len(word_to_idx) + 1
         vocabulary_len = len(word_to_idx)
         emb_dimension = self.embedding_builder.get_dimensions()
         # get the matrix for the sentences
-        embedding_matrix = word_embeddings
-        #embedding_matrix = np.vstack([word_embeddings, np.zeros((vocabulary_len,))])
+        embedding_matrix = word_input
+        #embedding_matrix = np.vstack([word_input, np.zeros((vocabulary_len,))])
 
         # embedding layer
         embedding_layer = Embedding(input_dim=vocabulary_len, output_dim=emb_dimension, trainable=False, name="EMBEDDING")
+        embedding_layer.build((None,))
+        embedding_layer.set_weights([embedding_matrix])
+        return embedding_layer
+
+    def pretrained_embedding_layer_seq(self):
+        # create Keras embedding layer
+        word_to_idx, idx_to_word, word_input = self.embedding_builder.read_embedding()
+        #vocabulary_len = len(word_to_idx) + 1
+        vocabulary_len = len(word_to_idx)
+        emb_dimension = self.embedding_builder.get_dimensions()
+        # get the matrix for the sentences
+        embedding_matrix = word_input
+        #embedding_matrix = np.vstack([word_input, np.zeros((vocabulary_len,))])
+
+        # embedding layer
+        embedding_layer = Embedding(input_dim=vocabulary_len, output_dim=emb_dimension, input_length=self.max_sentence_len, trainable=False, name="EMBEDDING")
         embedding_layer.build((None,))
         embedding_layer.set_weights([embedding_matrix])
         return embedding_layer
@@ -98,12 +117,12 @@ class TweetSentiment3LSTM:
         # Input Layer
         sentence_input = Input(shape = (self.max_sentence_len,), name="INPUT")
         # Embedding layer
-        embeddings_layer = self.pretrained_embedding_layer()
-        embeddings = embeddings_layer(sentence_input)
+        input_layer = self.pretrained_embedding_layer()
+        input = input_layer(sentence_input)
         # First LSTM Layer
-        X  = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(embeddings)
+        X  = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(input)
         # Dropout regularization
-        X = Dropout(first_layer_dropout, name="DROPOUT_1") (X)
+        X = Dropout(first_layer_dropout, name="dropout") (X)
         # Second LSTM Layer
         X  = LSTM(first_layer_units, return_sequences=True, name='LSTM_2')(X)
         # Dropout regularization
@@ -122,13 +141,13 @@ class TweetSentiment3LSTM:
 
     def pretrained_embedding_layer(self):
         # create Keras embedding layer
-        word_to_idx, idx_to_word, word_embeddings = self.embedding_builder.read_embedding()
+        word_to_idx, idx_to_word, word_input = self.embedding_builder.read_embedding()
         #vocabulary_len = len(word_to_idx) + 1
         vocabulary_len = len(word_to_idx)
         emb_dimension = self.embedding_builder.get_dimensions()
         # get the matrix for the sentences
-        embedding_matrix = word_embeddings
-        #embedding_matrix = np.vstack([word_embeddings, np.zeros((vocabulary_len,))])
+        embedding_matrix = word_input
+        #embedding_matrix = np.vstack([word_input, np.zeros((vocabulary_len,))])
 
         # embedding layer
         embedding_layer = Embedding(input_dim=vocabulary_len, output_dim=emb_dimension, trainable=False, name="EMBEDDING")
@@ -172,14 +191,14 @@ class TweetSentiment2LSTM2Dense(TweetSentiment2LSTM):
         # Input Layer
         sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT")
         # Embedding layer
-        embeddings_layer = self.pretrained_embedding_layer()
-        embeddings = embeddings_layer(sentence_input)
+        input_layer = self.pretrained_embedding_layer()
+        input = input_layer(sentence_input)
         # First LSTM Layer
-        # X  = LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2(0.1))(embeddings)
-        X = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(embeddings)
+        # X  = LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2(0.1))(input)
+        X = LSTM(first_layer_units, return_sequences=True, name='LSTM_1')(input)
 
         # Dropout regularization
-        X = Dropout(first_layer_dropout, name="DROPOUT_1")(X)
+        X = Dropout(first_layer_dropout, name="dropout")(X)
         # Second LSTM Layer
         # X  = LSTM(second_layer_units, return_sequences=False, name="LSTM_2", kernel_regularizer=l2(0.1))(X)
         # Second Layer Dropout
@@ -192,51 +211,146 @@ class TweetSentiment2LSTM2Dense(TweetSentiment2LSTM):
         # create the model
         self.model = Model(input=sentence_input, output=X)
 
-
 class TweetSentiment2LSTMMaxDense(TweetSentiment2LSTM):
     def __init__(self, max_sentence_len, embedding_builder):
         super().__init__(max_sentence_len, embedding_builder)
 
-    def build(self, first_layer_units = 128, first_layer_dropout=0.5, second_layer_units = 128,
-              second_layer_dropout = 0.5, relu_dense_layer = 64, dense_layer_units = 3, l2=None):
+    def build(self, layer_units_1=0, kernel_reg_1=0, recu_dropout_1=0, dropout_1=0, layer_units_2=0, kernel_reg_2=0,
+              recu_dropout_2=0, dropout_2=0, dense_layer_1=0, regula_dense_1=0, dense_layer_2=0):
+
+        # Create file to save models
+        filename = "model-" + str(datetime.now()).replace(" ", "-")[:19] + ".txt"
+        f = open("models/" + filename, "a+")
+
         # Input Layer
         sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT")
         # Embedding layer
-        embeddings_layer = self.pretrained_embedding_layer()
-        embeddings = embeddings_layer(sentence_input)
-        # X = LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2, recurrent_dropout=0.4)(embeddings)
-        X = Bidirectional(LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2, recurrent_dropout=0.4))(embeddings)
-        X = Dropout(first_layer_dropout, name="DROPOUT_1")(X)
-        X = Dense(200, activation='relu', kernel_regularizer=l2)(X)
-        X = LSTM(second_layer_units, return_sequences=False, name="LSTM_2", kernel_regularizer=l2)(X)
-        X = Dropout(second_layer_dropout, name="DROPOUT_2")(X)
-        X = Dense(relu_dense_layer, activation='relu', kernel_regularizer=l2)(X)
-        X = Dense(dense_layer_units)(X)
-        # X = BatchNormalization()(X)
+        input_layer = self.pretrained_embedding_layer()
+        input = input_layer(sentence_input)
+        X = None
+
+        # LSTM 1
+        X = self.create_LSTM(input, f, layer_units_1, kernel_reg_1, recu_dropout_1, True, 'LSTM_1')
+        # Dropout 1
+        X = self.create_dropout(X, f, dropout_1, 'dropout_1')
+        # LSTM 2
+        X = self.create_LSTM(X, f, layer_units_2, kernel_reg_2, recu_dropout_2, False, 'LSTM_2')
+        # Dropout 2
+        X = self.create_dropout(X, f, dropout_2, 'dropout_2')
+        # Dense Layer 1
+        X = self.create_dense(X, f, dense_layer_1, regula_dense_1, True, 'relu', 'dense_1')
+        #Dense Layer 2
+        X = self.create_dense(X, f, dense_layer_2, 0, False, None, 'dense_2')
+
+        X = BatchNormalization()(X)
         X = Activation("softmax", name="softmax_final")(X)
         self.model = Model(input=sentence_input, output=X)
 
-class TweetSentiment2LSTMMaxDenseSequential(TweetSentiment2LSTM):
+        f.close()
+        return filename
+
+    def create_dense(self, X, f, dense_layer, regula_dense, activation, type_activation, name):
+        try:
+            if dense_layer == 0 and regula_dense == 0:
+                f.write("Error, you need to assign values to dense layer units and regularization to the dense layer")
+                raise Exception("ERROR creating DENSE layer all params are 0")
+            else:
+                params = {}
+                if regula_dense != 0:
+                    params['kernel_regularizer'] = l2(regula_dense)
+                if activation:
+                    params['activation'] = type_activation
+
+                X = Dense(dense_layer, **params, name=name)(X)
+                f.write("\nDense: " + str(dense_layer) + " kernel_regularizer: l2(" + str(regula_dense) +
+                        ") activation: " + type_activation)
+                print("ENTRO DENSE LAYER 2")
+        except Exception as e:
+            print(e)
+            print("ERROR creating Dense layer in the model")
+        return X
+
+    def create_dropout(self, X, f, dropout, name):
+        try:
+            if dropout == 0:
+                f.write("Error, you need to assign values to dropout to the dropout layer")
+                raise Exception("ERROR creating DROPOUT layer all params are 0")
+            else:
+                X = Dropout(dropout, name=name)(X)
+                f.write("\nDropout: " + str(dropout))
+                print("ENTRO DROPOUT")
+        except Exception as e:
+            print(e)
+            print("ERROR creating Dropout layer in the model")
+        return X
+
+    def create_LSTM(self, input, f, layer_units, kernel_reg, recu_dropout, return_sequences, name):
+        params = {}
+        try:
+            if layer_units == 0 and kernel_reg == 0 and recu_dropout == 0:
+                f.write("Error, you need to assign values to layer_units to initialize the LSTM layer")
+                raise Exception("ERROR creating LSTM layer all params are 0")
+            else:
+                if kernel_reg != 0:
+                    params['kernel_regularizer'] = l2(kernel_reg)
+                if recu_dropout != 0:
+                    params['recurrent_dropout'] = recu_dropout
+
+                X = LSTM(layer_units, return_sequences=return_sequences, name=name, **params)(input)
+                f.write(name + " with layer_units: " + str(layer_units) + " kernel_regularizer: l2(" + str(
+                    kernel_reg) + ") recurrent_dropout: " + str(recu_dropout) + "and return sequences: " + str(
+                    return_sequences))
+                print("ENTRO LSTM")
+        except Exception as e:
+            print(e)
+            print("ERROR creating LSTM layer in the model")
+        return X
+
+
+class TweetSentiment2LSTMMaxDenseBidirectional(TweetSentiment2LSTM):
+    def __init__(self, max_sentence_len, embedding_builder):
+        super().__init__(max_sentence_len, embedding_builder)
+
+    def build(self, layer_units_1=0, kernel_reg_1=0, recu_dropout_1=0, dropout=0, dense_layer_1=0,
+              layer_units_2=0, kernel_reg_2=0, recu_dropout_2=0, dropout_2=0, dense_layer_2=0, dense_last=3):
+        # Input Layer
+        sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT")
+        # Embedding layer
+        input_layer = self.pretrained_embedding_layer()
+        input = input_layer(sentence_input)
+        X = Bidirectional(LSTM(layer_units_1, return_sequences=True, name='LSTM_1', kernel_regularizer=l2(kernel_reg_1), recurrent_dropout=recu_dropout_1))(input)
+        # X = LSTM(layer_units_1, return_sequences=True, name='LSTM_1', kernel_regularizer=l2(kernel_reg_1), recurrent_dropout=recu_dropout_1)(input)
+        X = Dropout(dropout, name="dropout")(X)
+        X = Dense(dense_layer_1, activation='relu', kernel_regularizer=l2(kernel_reg_1))(X)
+
+        X = LSTM(layer_units_2, return_sequences=False, name="LSTM_2", kernel_regularizer=l2(kernel_reg_2), recurrent_dropout=recu_dropout_2)(X)
+        X = Dropout(dropout_2, name="DROPOUT_2")(X)
+        X = Dense(dense_layer_2, activation='relu', kernel_regularizer=l2(kernel_reg_2))(X)
+        X = Dense(dense_last)(X)
+        X = BatchNormalization()(X)
+        X = Activation("softmax", name="softmax_final")(X)
+        self.model = Model(input=sentence_input, output=X)
+
+
+class  TweetSentiment2LSTMMaxDenseSequential(TweetSentiment2LSTM):
     def __init__(self, max_sentence_len, embedding_builder):
         super().__init__(max_sentence_len, embedding_builder)
 
     def build(self, first_layer_units = 128, first_layer_dropout=0.5, second_layer_units = 128,
               second_layer_dropout = 0.5, relu_dense_layer = 64, dense_layer_units = 3, l2=None):
-        # Input Layer
-        sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT")
         # Embedding layer
-        embeddings_layer = self.pretrained_embedding_layer()
-        embeddings = embeddings_layer(sentence_input)
-
+        input_layer = self.pretrained_embedding_layer_seq()
         model = Sequential()
-        model.add(embeddings)
+        model.add(input_layer)
         model.add(LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2, recurrent_dropout=0.4))
-        model.add(Dropout(first_layer_dropout, name="DROPOUT_1"))
+        model.add(Dropout(first_layer_dropout, name="dropout"))
         model.add(Dense(200, activation='relu', kernel_regularizer=l2))
         model.add(LSTM(second_layer_units, return_sequences=False, name="LSTM_2", kernel_regularizer=l2))
         model.add(Dropout(second_layer_dropout, name="DROPOUT_2"))
         model.add(Dense(relu_dense_layer, activation='relu', kernel_regularizer=l2))
         model.add(Dense(dense_layer_units))
         model.add(Activation("softmax", name="softmax_final"))
-
         self.model = model
+        model.compile(optimizer=RMSprop(decay=0.001), loss="categorical_crossentropy", metrics=['accuracy'])
+        return model
+

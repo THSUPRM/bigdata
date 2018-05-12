@@ -1,21 +1,19 @@
-from tabnanny import verbose
-
 from ths.nn.sequences.tweets import *
 from ths.utils.files import GloveEmbedding
 from ths.utils.sentences import SentenceToIndices, PadSentences
 from keras import backend as KerasBack
 from keras.callbacks import TensorBoard
-from keras.optimizers import SGD, Adam, RMSprop
+from keras.optimizers import SGD, Adam, RMSprop, Adadelta
 from tensorflow import gfile as gf
 from keras.utils import to_categorical
-from keras.regularizers import l2
 from keras.wrappers.scikit_learn import KerasClassifier
-from keras.callbacks import History, ModelCheckpoint
+from keras.callbacks import History
 from sklearn.model_selection import GridSearchCV
 
 import numpy as np
 import csv
 import math
+import itertools
 
 class ProcessTweetsGlove:
     def __init__(self, labeled_tweets_filename, embedding_filename):
@@ -102,6 +100,140 @@ class ProcessTweetsGlove:
         NN.save_model(json_filename, h5_filename)
         print("Done!")
 
+class ProcessTweetsGloveOnePassHyperParam:
+    def __init__(self, labeled_tweets_filename, embedding_filename):
+        self.labeled_tweets_filename = labeled_tweets_filename
+        self.embedding_filename = embedding_filename
+
+    def getmatrixhyperparam(self, i=1):
+        a = [
+            ['learningRate' ,0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
+            ['momentum'     ,0.09, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.9, 1],
+            ['epochs'       ,1, 80, 75, 85, 100],
+            ['batchSize'    ,81, 82, 83, 90, 95],
+            #LSTM1
+            ['layerUnits1'  ,48, 803, 763, 853, 1003],
+            ['kernelReg1'   ,0.001, 80, 75, 85, 100],
+            ['recuDropout1' ,0.4, 80, 75, 85, 100],
+            #Dropout1
+            ['dropout1'     ,0.3, 80, 75, 85, 100],
+            #LSTM2
+            ['layerUnits2'  ,24, 80, 75, 85, 100],
+            ['kernelReg2'   ,0.001, 80, 75, 85, 100],
+            ['recuDropout2' ,0.2, 80, 75, 85, 100],
+            #Dropout2
+            ['dropout2'     ,0.5, 80, 75, 85, 100],
+            # DenseLayer1
+            ['denseLayer1'  ,100, 80, 75, 85, 100],
+            ['regulaDense1' ,0.001, 80, 75, 85, 100],
+            #DenseLayer2
+            ['denseLayer2'  ,3, 80, 75, 85, 100],
+            ]
+        b = list();
+
+        for n in range(0, i):
+            b.append(a[n][1:len(a[n])])
+
+        b = itertools.product(*b)
+
+        return b
+
+    def process(self, json_filename, h5_filename):
+        if (gf.Exists('/tmp/logs')):
+            gf.DeleteRecursively('/tmp/logs')
+        np.random.seed(11)
+        # open the file with tweets
+        X_all = []
+        Y_all = []
+        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+            i = 0
+            csv_file = csv.reader(f, delimiter = ',')
+            for r in csv_file:
+                if i !=0:
+                    tweet = r[0]
+                    label = r[1]
+                    X_all.append(tweet)
+                    Y_all.append(label)
+                i = i + 1
+        print("Data Ingested")
+        # divide the data into training and test
+        num_data = len(X_all)
+        limit = math.ceil(num_data * 0.60)
+        X_train_sentences = X_all
+        Y_train = Y_all
+        #Get embeeding
+        G = GloveEmbedding(self.embedding_filename)
+        word_to_idx, idx_to_word, embedding = G.read_embedding()
+        S = SentenceToIndices(word_to_idx)
+        X_train_indices, max_len = S.map_sentence_list(X_train_sentences)
+        print("Train data mappend to indices")
+        P = PadSentences(max_len)
+        X_train_pad = P.pad_list(X_train_indices)
+        print("Train data padded")
+        #convert to numPY arrays
+        X_train = np.array(X_train_pad)
+        Y_train = np.array(Y_train)
+        Y_train = to_categorical(Y_train, num_classes=3)
+        print("Train data convert to numpy arrays")
+        NN = TweetSentiment2LSTMMaxDense(max_len, G)
+        print("Model created")
+        num_params = 15
+        # indices = [7, 8, 9, 12, 13, max_params]
+        l = list()
+        # for x in indices:
+        params = self.getmatrixhyperparam(num_params)
+        for combination in params:
+            l = [0] * num_params
+            print("COMBINATION: " + str(combination))
+            for e in range(0, num_params):
+                l[e] = combination[e]
+
+            filename = NN.build(layer_units_1=l[4], kernel_reg_1=l[5], recu_dropout_1=l[6], dropout_1=l[7],
+                                layer_units_2=l[8], kernel_reg_2=l[9], recu_dropout_2=l[10], dropout_2=l[11],
+                                dense_layer_1=l[12], regula_dense_1=l[13], dense_layer_2=l[14])
+
+            print("FILENAME: " + filename)
+            print("Model built")
+            NN.summary()
+            # sgd         = SGD(lr=l[0], momentum=l[1], nesterov=False)
+            rmsprop     = RMSprop(lr=l[0], rho=0.9, epsilon=1e-06)
+            # adadelta    = Adadelta(lr=l[0], rho=0.95, epsilon=1e-06)
+            # adam        = Adam(lr=l[0], beta_1=0.9, beta_2=0.999)
+            NN.compile(optimizer=rmsprop, loss="categorical_crossentropy", metrics=['accuracy'])
+            print("Model compiled")
+            print("Begin training")
+            history = History()
+            print("epochs: " + str(l[2]) + " batch Size: " + str(l[3]))
+            NN.fit(X_train, Y_train, epochs=l[2], batch_size=l[3], validation_split=0.3, callbacks=[history])
+
+            print("HISTORY history: " + str(history.history['acc'][0]-history.history['val_acc'][0]))
+
+            print("Accuracy:::::::::::::::::::::::::" + str(history.history['acc'][0]))
+            print("VAL Accuracy:::::::::::::::::::::::::" + str(history.history['val_acc'][0]))
+            print("Model trained")
+            X_Predict = ["my zika is so bad but i am so happy because i am at home chilling", "i love colombia but i miss the flu food",
+                         "my has been tested for ebola", "there is a diarrhea outbreak in the city", "i got flu yesterday and now start the diarrhea",
+                         "my dog has diarrhea", "do you want a flu shoot?", "diarrhea flu ebola zika", "the life is amazing",
+                         "everything in my home and my cat stink nasty", "i love you so much", "My mom has diarrhea of the mouth",
+                         "when u got bill gates making vaccines you gotta wonder why anyone is allowed to play with the ebola virus? " +
+                         "let's just say for a second that vaccines were causing autism and worse, would they tell you? would they tell you we have more disease then ever?"]
+            X_Predict_Idx, max_len2 = S.map_sentence_list(X_Predict)
+            i =0
+            for s in X_Predict_Idx:
+                print(str(i) + ": ", s)
+                i = i+1
+            print(X_Predict)
+            X_Predict_Final = P.pad_list(X_Predict_Idx)
+            #X_Predict = [X_Predict]
+            X_Predict_Final = np.array(X_Predict_Final)
+            print("Predict: ", NN.predict(X_Predict_Final))
+            # print("Storing model and weights")
+            # NN.save_model(json_filename, h5_filename)
+            print("Done!")
+            KerasBack.clear_session()
+            print("Cleared Keras!")
+                # if (x == 7):
+                #     break
 
 class ProcessTweetsGloveOnePass:
     def __init__(self, labeled_tweets_filename, embedding_filename):
@@ -131,12 +263,6 @@ class ProcessTweetsGloveOnePass:
         limit = math.ceil(num_data * 0.60)
         X_train_sentences = X_all
         Y_train = Y_all
-        # divide the data into X_train, Y_train, X_test, Y_test
-        #X_train_sentences = X_all[0: limit]
-        #Y_train = Y_all[0: limit]
-        #X_test_sentences = X_all[limit:]
-        #Y_test = Y_all[limit:]
-        #print("Data Divided")
         #Get embeeding
         G = GloveEmbedding(self.embedding_filename)
         word_to_idx, idx_to_word, embedding = G.read_embedding()
@@ -151,21 +277,21 @@ class ProcessTweetsGloveOnePass:
         Y_train = np.array(Y_train)
         Y_train = to_categorical(Y_train, num_classes=3)
         print("Train data convert to numpy arrays")
-        #NN = TweetSentiment2LSTM2Dense(max_len, G)
-        NN = TweetSentiment2LSTMMaxDense(max_len, G)
+        NN = TweetSentiment2LSTMMaxDenseBidirectional(max_len, G)
         print("Model created")
-        NN.build(first_layer_units=50, first_layer_dropout=0.4, second_layer_units = 50, second_layer_dropout = 0.5, relu_dense_layer=64, dense_layer_units=3)
+        NN.build(layer_units_1=48, kernel_reg_1=0.001, recu_dropout_1=0.4, dropout_1=0.3, dense_layer_1=100,
+                 layer_units_2=24, kernel_reg_2=0.001, recu_dropout_2=0.2, dropout_2=0.5, dense_layer_2=20)
+
         print("Model built")
         NN.summary()
-        sgd = SGD(lr=0.01, momentum=0.9, decay=0.1, nesterov=False)
-        rmsprop = RMSprop(decay=0.001)
+        rmsprop = RMSprop(lr=0.0001, rho=0.9, epsilon=1e-06)
         NN.compile(optimizer=rmsprop, loss="categorical_crossentropy", metrics=['accuracy'])
         print("Model compiled")
         print("Begin training")
         history = History()
         callback = TensorBoard(log_dir="/tmp/logs")
-        # NN.fit(X_train, Y_train, epochs=1, callbacks=[callback], validation_split=0.3)
-        NN.fit(X_train, Y_train, epochs=2, callbacks=[history], validation_split=0.3)
+        NN.fit(X_train, Y_train, epochs=50, validation_split=0.3, callbacks=[history])
+
         print("Accuracy:::::::::::::::::::::::::" + str(history.history['acc']))
         print("VAL Accuracy:::::::::::::::::::::::::" + str(history.history['val_acc']))
         print("Model trained")
@@ -232,40 +358,19 @@ class ProcessTweetsGloveOnePassParam:
         Y_train = np.array(Y_train)
         Y_train = to_categorical(Y_train, num_classes=3)
         print("Train data convert to numpy arrays")
-        #NN = TweetSentiment2LSTM2Dense(max_len, G)
-        NN = TweetSentiment2LSTMMaxDenseSequential(max_len, G)
-        print("Model created")
-        NN.build(first_layer_units=50, first_layer_dropout=0.4, second_layer_units = 50, second_layer_dropout = 0.5, relu_dense_layer=64, dense_layer_units=3)
-        print("Model built")
-        NN.summary()
-        rmsprop = RMSprop(decay=0.001)
-        NN.compile(optimizer=rmsprop, loss="categorical_crossentropy", metrics=['accuracy'])
-        print("Model compiled")
-        print("Begin training")
-        history = History()
-        callback = TensorBoard(log_dir="/tmp/logs")
-        # NN.fit(X_train, Y_train, epochs=1, callbacks=[callback], validation_split=0.3)
-        NN.fit(X_train, Y_train, epochs=2, callbacks=[history], validation_split=0.3)
-        print("Accuracy:::::::::::::::::::::::::" + str(history.history['acc']))
-        print("VAL Accuracy:::::::::::::::::::::::::" + str(history.history['val_acc']))
-        print("Model trained")
-        X_Predict = ["my zika is so bad but i am so happy because i am at home chilling", "i love colombia but i miss the flu food",
-                     "my has been tested for ebola", "there is a diarrhea outbreak in the city", "i got flu yesterday and now start the diarrhea",
-                     "my dog has diarrhea", "do you want a flu shoot?", "diarrhea flu ebola zika", "the life is amazing",
-                     "everything in my home and my cat stink nasty", "i love you so much", "My mom has diarrhea of the mouth",
-                     "when u got bill gates making vaccines you gotta wonder why anyone is allowed to play with the ebola virus? " +
-                     "let's just say for a second that vaccines were causing autism and worse, would they tell you? would they tell you we have more disease then ever?"]
-        X_Predict_Idx, max_len2 = S.map_sentence_list(X_Predict)
-        i =0
-        for s in X_Predict_Idx:
-            print(str(i) + ": ", s)
-            i = i+1
-        print(X_Predict)
-        X_Predict_Final = P.pad_list(X_Predict_Idx)
-        X_Predict_Final = np.array(X_Predict_Final)
-        print("Predict: ", NN.predict(X_Predict_Final))
-        # print("Storing model and weights")
-        # NN.save_model(json_filename, h5_filename)
-        print("Done!")
-        KerasBack.clear_session()
-        print("Cleared Keras!")
+        model = KerasClassifier(build_fn=TweetSentiment2LSTMMaxDenseSequential(max_len, G).build(first_layer_units=50,
+                                first_layer_dropout=0.4, second_layer_units=50, second_layer_dropout=0.5,
+                                relu_dense_layer=64, dense_layer_units=3), verbose=0)
+        # define the grid search parameters
+        batch_size = [10, 20, 40, 60, 80, 100]
+        epochs = [10, 50, 100]
+        param_grid = dict(batch_size=batch_size, epochs=epochs)
+        grid = GridSearchCV(estimator=model, param_grid=param_grid )
+        grid_result = grid.fit(X_train, Y_train)
+        # summarize results
+        print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+        means = grid_result.cv_results_['mean_test_score']
+        stds = grid_result.cv_results_['std_test_score']
+        params = grid_result.cv_results_['params']
+        for mean, stdev, param in zip(means, stds, params):
+            print("%f (%f) with: %r" % (mean, stdev, param))
