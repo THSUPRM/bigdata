@@ -211,16 +211,16 @@ class TweetSentiment2LSTM2Dense(TweetSentiment2LSTM):
         # create the model
         self.model = Model(input=sentence_input, output=X)
 
-class TweetSentiment2LSTMMaxDense(TweetSentiment2LSTM):
+class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
+    model_created = ""
+
     def __init__(self, max_sentence_len, embedding_builder):
         super().__init__(max_sentence_len, embedding_builder)
 
     def build(self, layer_units_1=0, kernel_reg_1=0, recu_dropout_1=0, dropout_1=0, layer_units_2=0, kernel_reg_2=0,
               recu_dropout_2=0, dropout_2=0, dense_layer_1=0, regula_dense_1=0, dense_layer_2=0):
 
-        # Create file to save models
-        filename = "model-" + str(datetime.now()).replace(" ", "-")[:19] + ".txt"
-        f = open("models/" + filename, "a+")
+        self.model_created = ""
 
         # Input Layer
         sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT")
@@ -230,29 +230,66 @@ class TweetSentiment2LSTMMaxDense(TweetSentiment2LSTM):
         X = None
 
         # LSTM 1
-        X = self.create_LSTM(input, f, layer_units_1, kernel_reg_1, recu_dropout_1, True, 'LSTM_1')
+        X = self.create_LSTM(input, layer_units_1, kernel_reg_1, recu_dropout_1, True, 'LSTM_1')
         # Dropout 1
-        X = self.create_dropout(X, f, dropout_1, 'dropout_1')
+        X = self.create_dropout(X, dropout_1, 'dropout_1')
         # LSTM 2
-        X = self.create_LSTM(X, f, layer_units_2, kernel_reg_2, recu_dropout_2, False, 'LSTM_2')
+        X = self.create_LSTM(X, layer_units_2, kernel_reg_2, recu_dropout_2, False, 'LSTM_2')
         # Dropout 2
-        X = self.create_dropout(X, f, dropout_2, 'dropout_2')
+        X = self.create_dropout(X, dropout_2, 'dropout_2')
         # Dense Layer 1
-        X = self.create_dense(X, f, dense_layer_1, regula_dense_1, True, 'relu', 'dense_1')
+        X = self.create_dense(X, dense_layer_1, regula_dense_1, True, 'relu', 'dense_1')
         #Dense Layer 2
-        X = self.create_dense(X, f, dense_layer_2, 0, False, None, 'dense_2')
+        X = self.create_dense(X, dense_layer_2, 0, False, None, 'dense_2')
 
         X = BatchNormalization()(X)
+        self.model_created = self.model_created + "\nBatch Normalization"
         X = Activation("softmax", name="softmax_final")(X)
+        self.model_created = self.model_created + "\nActivation type: Softmax"
         self.model = Model(input=sentence_input, output=X)
 
-        f.close()
-        return filename
+        return self.model_created
 
-    def create_dense(self, X, f, dense_layer, regula_dense, activation, type_activation, name):
+    def create_LSTM(self, input, layer_units, kernel_reg, recu_dropout, return_sequences, name):
+        params = {}
+        try:
+            if layer_units == 0 and kernel_reg == 0 and recu_dropout == 0:
+                self.model_created = self.model_created + "Error, you need to assign values to layer_units to initialize the LSTM layer"
+                raise Exception("ERROR creating LSTM layer all params are 0")
+            else:
+                if kernel_reg != 0:
+                    params['kernel_regularizer'] = l2(kernel_reg)
+                if recu_dropout != 0:
+                    params['recurrent_dropout'] = recu_dropout
+
+                X = LSTM(layer_units, return_sequences=return_sequences, name=name, **params)(input)
+                self.model_created = self.model_created + "\n" + name + " with layer_units: " + str(layer_units) + \
+                                     " kernel_regularizer: l2(" + str( kernel_reg) + ") recurrent_dropout: " + \
+                                     str(recu_dropout) + " and return sequences: " + str(return_sequences)
+                print("ENTRO LSTM")
+        except Exception as e:
+            print(e)
+            print("ERROR creating LSTM layer in the model")
+        return X
+
+    def create_dropout(self, X, dropout, name):
+        try:
+            if dropout == 0:
+                self.model_created = self.model_created + "Error, you need to assign values to dropout to the dropout layer"
+                raise Exception("ERROR creating DROPOUT layer all params are 0")
+            else:
+                X = Dropout(dropout, name=name)(X)
+                self.model_created = self.model_created + "\nDropout: " + str(dropout)
+                print("ENTRO DROPOUT")
+        except Exception as e:
+            print(e)
+            print("ERROR creating Dropout layer in the model")
+        return X
+
+    def create_dense(self, X, dense_layer, regula_dense, activation, type_activation, name):
         try:
             if dense_layer == 0 and regula_dense == 0:
-                f.write("Error, you need to assign values to dense layer units and regularization to the dense layer")
+                self.model_created = self.model_created + "Error, you need to assign values to dense layer units and regularization to the dense layer"
                 raise Exception("ERROR creating DENSE layer all params are 0")
             else:
                 params = {}
@@ -262,48 +299,12 @@ class TweetSentiment2LSTMMaxDense(TweetSentiment2LSTM):
                     params['activation'] = type_activation
 
                 X = Dense(dense_layer, **params, name=name)(X)
-                f.write("\nDense: " + str(dense_layer) + " kernel_regularizer: l2(" + str(regula_dense) +
-                        ") activation: " + type_activation)
-                print("ENTRO DENSE LAYER 2")
+                self.model_created = self.model_created + "\nDense: " + str(dense_layer) + " kernel_regularizer: l2(" + \
+                                     str(regula_dense) + ") activation: " + str(type_activation)
+                print("ENTRO DENSE LAYER")
         except Exception as e:
             print(e)
             print("ERROR creating Dense layer in the model")
-        return X
-
-    def create_dropout(self, X, f, dropout, name):
-        try:
-            if dropout == 0:
-                f.write("Error, you need to assign values to dropout to the dropout layer")
-                raise Exception("ERROR creating DROPOUT layer all params are 0")
-            else:
-                X = Dropout(dropout, name=name)(X)
-                f.write("\nDropout: " + str(dropout))
-                print("ENTRO DROPOUT")
-        except Exception as e:
-            print(e)
-            print("ERROR creating Dropout layer in the model")
-        return X
-
-    def create_LSTM(self, input, f, layer_units, kernel_reg, recu_dropout, return_sequences, name):
-        params = {}
-        try:
-            if layer_units == 0 and kernel_reg == 0 and recu_dropout == 0:
-                f.write("Error, you need to assign values to layer_units to initialize the LSTM layer")
-                raise Exception("ERROR creating LSTM layer all params are 0")
-            else:
-                if kernel_reg != 0:
-                    params['kernel_regularizer'] = l2(kernel_reg)
-                if recu_dropout != 0:
-                    params['recurrent_dropout'] = recu_dropout
-
-                X = LSTM(layer_units, return_sequences=return_sequences, name=name, **params)(input)
-                f.write(name + " with layer_units: " + str(layer_units) + " kernel_regularizer: l2(" + str(
-                    kernel_reg) + ") recurrent_dropout: " + str(recu_dropout) + "and return sequences: " + str(
-                    return_sequences))
-                print("ENTRO LSTM")
-        except Exception as e:
-            print(e)
-            print("ERROR creating LSTM layer in the model")
         return X
 
 
