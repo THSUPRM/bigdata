@@ -105,15 +105,17 @@ class ProcessTweetsGlove:
         print("Done!")
 
 class ProcessTweetsGloveOnePassHyperParam:
-    def __init__(self, labeled_tweets_filename, embedding_filename):
+    def __init__(self, labeled_tweets_filename, embedding_filename, optimizer):
         self.labeled_tweets_filename = labeled_tweets_filename
         self.embedding_filename = embedding_filename
+        self.optimizer = optimizer
+
 
     def getmatrixhyperparam(self, i=1):
         a = [
             ['learningRate' ,0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
             ['momentum'     ,0.09, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.9, 1],
-            ['epochs'       ,10, 30, 70, 85, 100, 120],
+            ['epochs'       ,1, 10, 30, 70, 85, 100, 120],
             ['batchSize'    ,0, 5, 32, 50, 64, 80, 100],
             #LSTM1
             ['layerUnits1'  ,10, 30, 48, 60, 80, 100],
@@ -133,10 +135,7 @@ class ProcessTweetsGloveOnePassHyperParam:
             #DenseLayer2
             ['denseLayer2'  ,3],
             #Optimizer
-            # ['optimizer', 1]    # SGD
-            ['optimizer', 'RMSPROP']  # RMSPROP
-            # ['optimizer', 3]  # ADADELTA
-            # ['optimizer', 4]  # ADAM
+            ['optimizer', self.optimizer]
             ]
 
         b = list()
@@ -149,6 +148,8 @@ class ProcessTweetsGloveOnePassHyperParam:
         return b
 
     def process(self, json_filename, h5_filename):
+        start_time_total = time.time()
+        start_time_comp = datetime.now()
         if (gf.Exists('/tmp/logs')):
             gf.DeleteRecursively('/tmp/logs')
         np.random.seed(11)
@@ -189,12 +190,13 @@ class ProcessTweetsGloveOnePassHyperParam:
         l = list()
         params = self.getmatrixhyperparam(num_params)
         models = list()
-        for combination in itertools.islice(params, 10):
-            desc = ""
-            start_time = time.time()
+        # for combination in itertools.islice(params, 7):
+        for combination in params:
+            start_time_comb = time.time()
 
             log = open("models/model" + str(combination).replace(" ", "") + ".txt", "a+")
-            log.write("COMBINATION: " + str(combination))
+            log.write("Start time: " + str(datetime.now()))
+            log.write("\nCOMBINATION: " + str(combination))
 
             l = [0] * num_params
             for e in range(0, num_params):
@@ -208,7 +210,7 @@ class ProcessTweetsGloveOnePassHyperParam:
 
             # Assign the parameters agree the optimizer to use
             params_compile = {}
-            if l[15] == 1:
+            if l[15] == 'SGD':
                 sgd = SGD(lr=l[0], momentum=l[1], nesterov=False)
                 params_compile['optimizer'] = sgd
                 desc = desc + "\nSGD with learning rate: " + str(l[0]) + " momentum: " + str(l[1]) + " and nesterov=False"
@@ -216,11 +218,11 @@ class ProcessTweetsGloveOnePassHyperParam:
                 rmsprop = RMSprop(lr=l[0], rho=0.9, epsilon=1e-06)
                 params_compile['optimizer'] = rmsprop
                 desc = desc + "\nRMSPROP with learning rate: " + str(l[0]) + " rho: 0.9 and epsilon=1e-06"
-            elif l[15] == 3:
+            elif l[15] == 'ADADELTA':
                 adadelta = Adadelta(lr=l[0], rho=0.95, epsilon=1e-06)
                 params_compile['optimizer'] = adadelta
                 desc = desc + "\nADADELTA with learning rate: " + str(l[0]) + " rho: 0.95 and epsilon=1e-06"
-            elif l[15] == 4:
+            elif l[15] == 'ADAM':
                 adam = Adam(lr=l[0], beta_1=0.9, beta_2=0.999)
                 params_compile['optimizer'] = adam
                 desc = desc + "\nADAM with learning rate: " + str(l[0]) + " beta_1=0.9, beta_2=0.999"
@@ -238,7 +240,7 @@ class ProcessTweetsGloveOnePassHyperParam:
             NN.fit(X_train, Y_train, epochs=l[2], validation_split=0.3, callbacks=[history], **params_fit)
 
             model = [history.history['acc'][0], history.history['val_acc'][0],
-                     history.history['acc'][0]-history.history['val_acc'][0], desc]
+                     history.history['acc'][0]-history.history['val_acc'][0], desc, NN.model.get_weights(), NN.model.to_json()]
 
             log.write("\nacc: " + str(history.history['acc'][0]) + "\nval_acc: " + str(history.history['val_acc'][0]) +
                       "\ndiff_acc: " + str(history.history['val_acc'][0]-history.history['acc'][0]) + "\nModel:" + str(desc))
@@ -273,13 +275,28 @@ class ProcessTweetsGloveOnePassHyperParam:
             # print("Predict: ", NN.predict(X_Predict_Final))
             # print("Storing model and weights")
             # NN.save_model(json_filename, h5_filename)
+
             KerasBack.clear_session()
             print("Done and Cleared Keras!")
-            log.write(("\nExecution time: {} minutes".format((time.time() - start_time) / 60)))
+            log.write(("\nExecution time: {} minutes".format((time.time() - start_time_comb) / 60)))
+            log.write(("\nFinish time: " + str(datetime.now())))
             log.close()
 
         file = open("models/bestModel" + str(datetime.now())[:19].replace(" ", "T") + ".txt", "a+")
-        file.write(json.dumps(models, indent=4, sort_keys=True))
+
+        for m in models:
+            file.write("----------------------------------------------------------------------------------------------")
+            file.write("\nacc: " + str(m[0]))
+            file.write("\nval_acc: " + str(m[1]))
+            file.write("\ndiff_acc: " + str(m[2]))
+            file.write("\nmodel: " + str(m[3]))
+            file.write("\nweights: " + str(m[4]))
+            file.write("\nJSON: " + json.dumps(m[5], indent=4, sort_keys=True))
+            file.write("\n----------------------------------------------------------------------------------------------")
+
+        file.write("\nStart TOTAL execution time: " + str(start_time_comp))
+        file.write("\nTOTAL execution time: {} hours".format((time.time() - start_time_total) / (60 * 60)))
+        file.write("\nFinish TOTAL execution time: " + str(datetime.now()))
         file.close()
 
 class ProcessTweetsGloveOnePass:

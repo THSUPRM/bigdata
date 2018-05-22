@@ -180,7 +180,6 @@ class TweetSentiment3LSTM:
         self.model.save_weights(h5_filename)
         return
 
-
 class TweetSentiment2LSTM2Dense(TweetSentiment2LSTM):
     def __init__(self, max_sentence_len, embedding_builder):
         super().__init__(max_sentence_len, embedding_builder)
@@ -266,27 +265,21 @@ class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
                 self.model_created = self.model_created + "\n" + name + " with layer_units: " + str(layer_units) + \
                                      " kernel_regularizer: l2(" + str( kernel_reg) + ") recurrent_dropout: " + \
                                      str(recu_dropout) + " and return sequences: " + str(return_sequences)
-                print("ENTRO LSTM")
         except Exception as e:
             print(e)
             print("ERROR creating LSTM layer in the model")
         return X
 
-    def create_dropout(self, X, dropout, name):
+    def create_dropout(self, input, dropout, name):
         try:
-            if dropout == 0:
-                self.model_created = self.model_created + "Error, you need to assign values to dropout to the dropout layer"
-                raise Exception("ERROR creating DROPOUT layer all params are 0")
-            else:
-                X = Dropout(dropout, name=name)(X)
-                self.model_created = self.model_created + "\nDropout: " + str(dropout)
-                print("ENTRO DROPOUT")
+            X = Dropout(dropout, name=name)(input)
+            self.model_created = self.model_created + "\nDropout: " + str(dropout)
         except Exception as e:
             print(e)
             print("ERROR creating Dropout layer in the model")
         return X
 
-    def create_dense(self, X, dense_layer, regula_dense, activation, type_activation, name):
+    def create_dense(self, input, dense_layer, regula_dense, activation, type_activation, name):
         try:
             if dense_layer == 0 and regula_dense == 0:
                 self.model_created = self.model_created + "Error, you need to assign values to dense layer units and regularization to the dense layer"
@@ -298,10 +291,9 @@ class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
                 if activation:
                     params['activation'] = type_activation
 
-                X = Dense(dense_layer, **params, name=name)(X)
+                X = Dense(dense_layer, **params, name=name)(input)
                 self.model_created = self.model_created + "\nDense: " + str(dense_layer) + " kernel_regularizer: l2(" + \
                                      str(regula_dense) + ") activation: " + str(type_activation)
-                print("ENTRO DENSE LAYER")
         except Exception as e:
             print(e)
             print("ERROR creating Dense layer in the model")
