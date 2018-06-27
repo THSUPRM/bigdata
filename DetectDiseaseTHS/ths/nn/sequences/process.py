@@ -1,6 +1,6 @@
 from ths.nn.sequences.tweets import *
 from ths.utils.files import GloveEmbedding
-from ths.utils.sentences import SentenceToIndices, PadSentences
+from ths.utils.sentences import SentenceToIndices, PadSentences, TrimSentences
 from ths.nn.metrics.multiple import *
 from keras import backend as KerasBack
 from keras.callbacks import TensorBoard
@@ -105,7 +105,8 @@ class ProcessTweetsGlove:
         NN.save_model(json_filename, h5_filename)
         print("Done!")
 
-class ProcessTweetsGloveOnePassHyperParam:
+
+class ProcessTweetsGloveOnePassHyperParamAllData:
     def __init__(self, labeled_tweets_filename, embedding_filename, optimizer):
         self.labeled_tweets_filename = labeled_tweets_filename
         self.embedding_filename = embedding_filename
@@ -176,16 +177,24 @@ class ProcessTweetsGloveOnePassHyperParam:
         X_train_sentences = X_all
         Y_train = Y_all
         #Get embeeding
-        G = GloveEmbedding(self.embedding_filename)
+        G = GloveEmbedding(self.embedding_filename, dimensions=50)
         word_to_idx, idx_to_word, embedding = G.read_embedding()
         S = SentenceToIndices(word_to_idx)
         X_train_indices, max_len = S.map_sentence_list(X_train_sentences)
+
+        if max_len % 2 != 0:
+            max_len = max_len + 1
+
         P = PadSentences(max_len)
         X_train_pad = P.pad_list(X_train_indices)
+
+        trim_size = max_len
+        Trim = TrimSentences(trim_size)
+        X_train_pad = Trim.trim_list(X_train_pad)
+
         #convert to numPY arrays
         X_train = np.array(X_train_pad)
         Y_train = np.array(Y_train)
-        Y_train = to_categorical(Y_train, num_classes=3)
 
         NN = TweetSentiment2LSTMHyper(max_len, G)
 
@@ -246,6 +255,216 @@ class ProcessTweetsGloveOnePassHyperParam:
 
             log.write("\nacc: " + str(history.history['acc'][0]) + "\nval_acc: " + str(history.history['val_acc'][0]) +
                       "\ndiff_acc: " + str(history.history['val_acc'][0]-history.history['acc'][0]) + "\nModel:" + str(desc))
+
+            if len(models) < 6:
+                models.append(model)
+            else:
+                models.append(model)
+                models = sorted(models, key=itemgetter(1, 0, 2))
+                models.pop(3)
+
+            # print("HISTORY history: " + str(history.history['acc'][0]-history.history['val_acc'][0]))
+            #
+            # print("Accuracy:::::::::::::::::::::::::" + str(history.history['acc'][0]))
+            # print("VAL Accuracy:::::::::::::::::::::::::" + str(history.history['val_acc'][0]))
+
+            # X_Predict = ["my zika is so bad but i am so happy because i am at home chilling", "i love colombia but i miss the flu food",
+            #              "my has been tested for ebola", "there is a diarrhea outbreak in the city", "i got flu yesterday and now start the diarrhea",
+            #              "my dog has diarrhea", "do you want a flu shoot?", "diarrhea flu ebola zika", "the life is amazing",
+            #              "everything in my home and my cat stink nasty", "i love you so much", "My mom has diarrhea of the mouth",
+            #              "when u got bill gates making vaccines you gotta wonder why anyone is allowed to play with the ebola virus? " +
+            #              "let's just say for a second that vaccines were causing autism and worse, would they tell you? would they tell you we have more disease then ever?"]
+            # X_Predict_Idx, max_len2 = S.map_sentence_list(X_Predict)
+            # i =0
+            # for s in X_Predict_Idx:
+            #     print(str(i) + ": ", s)
+            #     i = i+1
+            # print(X_Predict)
+            # X_Predict_Final = P.pad_list(X_Predict_Idx)
+            # #X_Predict = [X_Predict]
+            # X_Predict_Final = np.array(X_Predict_Final)
+            # print("Predict: ", NN.predict(X_Predict_Final))
+            # print("Storing model and weights")
+            # NN.save_model(json_filename, h5_filename)
+
+            KerasBack.clear_session()
+            print("Done and Cleared Keras!")
+            log.write(("\nExecution time: {} minutes".format((time.time() - start_time_comb) / 60)))
+            log.write(("\nFinish time: " + str(datetime.now())))
+            log.close()
+
+        file = open("models/bestModel" + str(datetime.now())[:19].replace(" ", "T") + ".txt", "a+")
+
+        for m in models:
+            file.write("----------------------------------------------------------------------------------------------")
+            file.write("\nacc: " + str(m[0]))
+            file.write("\nval_acc: " + str(m[1]))
+            file.write("\ndiff_acc: " + str(m[2]))
+            file.write("\nmodel: " + str(m[3]))
+            file.write("\nweights: " + str(m[4]))
+            file.write("\nJSON: " + json.dumps(m[5], indent=4, sort_keys=True))
+            file.write("\n----------------------------------------------------------------------------------------------")
+
+        file.write("\nStart TOTAL execution time: " + str(start_time_comp))
+        file.write("\nTOTAL execution time: {} hours".format((time.time() - start_time_total) / (60 * 60)))
+        file.write("\nFinish TOTAL execution time: " + str(datetime.now()))
+        file.close()
+
+class ProcessTweetsGloveOnePassHyperParamPartionedData:
+    def __init__(self, labeled_tweets_filename, embedding_filename, optimizer):
+        self.labeled_tweets_filename = labeled_tweets_filename
+        self.embedding_filename = embedding_filename
+        self.optimizer = optimizer
+
+
+    def getmatrixhyperparam(self, i=1):
+        a = [
+            ['learningRate' ,0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
+            ['momentum'     ,0.09, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.9, 1],
+            ['epochs'       ,1, 20, 40, 60, 80, 100],
+            ['batchSize'    ,0, 1, 2, 8, 16, 32, 64],
+            #LSTM1
+            ['layerUnits1'  ,50], #igual que el numero del glove
+            ['kernelReg1'   ,0],
+            #['kernelReg1'   ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
+            ['recuDropout1' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
+            #Dropout1
+            ['dropout1'     ,0, 0.01, 0.09, 0.1, 0.4, 0.5],
+            #LSTM2
+            ['layerUnits2'  ,50, 40, 30, 20, 10, 5, 1],
+            ['kernelReg1'   ,0],
+            #['kernelReg2'   ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
+            ['recuDropout2' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
+            #Dropout2
+            ['dropout2'     ,0, 0.01, 0.09, 0.1, 0.4, 0.5],
+            # DenseLayer1
+            ['denseLayer1'  ,2, 8, 16, 32, 64, 128],
+            ['regulaDense1' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
+            #DenseLayer2
+            ['denseLayer2'  ,1],
+            #Optimizer
+            ['optimizer', self.optimizer]
+            ]
+
+        b = list()
+
+        for n in range(0, i):
+            b.append(a[n][1:len(a[n])])
+
+        b = itertools.product(*b)
+
+        return b
+
+    def process(self, json_filename, h5_filename):
+        start_time_total = time.time()
+        start_time_comp = datetime.now()
+        if (gf.Exists('/tmp/logs')):
+            gf.DeleteRecursively('/tmp/logs')
+        np.random.seed(11)
+        # open the file with tweets
+        X_all = []
+        Y_all = []
+        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+            i = 0
+            csv_file = csv.reader(f, delimiter=',')
+            for r in csv_file:
+                if i !=0:
+                    tweet = r[0]
+                    label = r[1]
+                    X_all.append(tweet)
+                    Y_all.append(label)
+                i = i + 1
+
+        # divide the data into training and test
+        num_data = len(X_all)
+        limit = math.ceil(num_data * 0.60)
+        #Get embeeding
+        G = GloveEmbedding(self.embedding_filename, dimensions=50)
+        word_to_idx, idx_to_word, embedding = G.read_embedding()
+        S = SentenceToIndices(word_to_idx)
+        X_train_indices, max_len = S.map_sentence_list(X_all)
+
+        if max_len % 2 != 0:
+            max_len = max_len + 1
+
+        P = PadSentences(max_len)
+        X_train_pad = P.pad_list(X_train_indices)
+
+        X_mapped = np.array(X_train_pad)
+        Y_mapped = np.array(Y_all)
+
+        num_data = len(X_all)
+        test_count = math.floor(num_data * 0.20)
+        cross_validation_count = test_count
+
+        # data set for test the model
+        Y_test = Y_mapped[0:test_count]
+
+        # data set for training and cross validation
+        X_train_cross = X_mapped[test_count:]
+
+        Y_train_cross = Y_mapped[test_count:]
+
+        NN = TweetSentiment2LSTMHyper(max_len, G)
+
+        num_params = 16
+        l = list()
+        params = self.getmatrixhyperparam(num_params)
+        models = list()
+        for combination in itertools.islice(params, 7):
+        #for combination in params:
+            start_time_comb = time.time()
+
+            log = open("models/model" + str(combination).replace(" ", "") + ".txt", "a+")
+            log.write("Start time: " + str(datetime.now()))
+            log.write("\nCOMBINATION: " + str(combination))
+
+            l = [0] * num_params
+            for e in range(0, num_params):
+                l[e] = combination[e]
+
+            desc = NN.build(layer_units_1=l[4], kernel_reg_1=l[5], recu_dropout_1=l[6], dropout_1=l[7],
+                            layer_units_2=l[8], kernel_reg_2=l[9], recu_dropout_2=l[10], dropout_2=l[11],
+                            dense_layer_1=l[12], regula_dense_1=l[13], dense_layer_2=l[14])
+
+            NN.summary()
+
+            # Assign the parameters agree the optimizer to use
+            params_compile = {}
+            if l[15] == 'SGD':
+                sgd = SGD(lr=l[0], momentum=l[1], nesterov=False)
+                params_compile['optimizer'] = sgd
+                desc = desc + "\nSGD with learning rate: " + str(l[0]) + " momentum: " + str(l[1]) + " and nesterov=False"
+            elif l[15] == 'RMSPROP':
+                rmsprop = RMSprop(lr=l[0], rho=0.9, epsilon=1e-06)
+                params_compile['optimizer'] = rmsprop
+                desc = desc + "\nRMSPROP with learning rate: " + str(l[0]) + " rho: 0.9 and epsilon=1e-06"
+            elif l[15] == 'ADADELTA':
+                adadelta = Adadelta(lr=l[0], rho=0.95, epsilon=1e-06)
+                params_compile['optimizer'] = adadelta
+                desc = desc + "\nADADELTA with learning rate: " + str(l[0]) + " rho: 0.95 and epsilon=1e-06"
+            elif l[15] == 'ADAM':
+                adam = Adam(lr=l[0], beta_1=0.9, beta_2=0.999)
+                params_compile['optimizer'] = adam
+                desc = desc + "\nADAM with learning rate: " + str(l[0]) + " beta_1=0.9, beta_2=0.999"
+
+            NN.compile(loss="binary_crossentropy", metrics=['accuracy', precision, recall, f1, fprate], **params_compile)
+
+            history = History()
+            desc = desc + "\nEpochs: " + str(l[2]) + " Batch Size: " + str(l[3])
+
+            # Assign batch size to fit function
+            params_fit = {}
+            if l[3] != 0:
+                params_fit['batch_size'] = l[3]
+
+            NN.fit(X_train, Y_train, epochs=l[2], validation_split=0.2, callbacks=[history], **params_fit)
+
+            model = [history.history['acc'][0], history.history['val_acc'][0], history.history['precision'][0],
+                     desc, NN.model.get_weights(), NN.model.to_json()]
+
+            log.write("\nacc: " + str(history.history['acc'][0]) + "\nval_acc: " + str(history.history['val_acc'][0]) +
+                      "\nModel:" + str(desc))
 
             if len(models) < 6:
                 models.append(model)
