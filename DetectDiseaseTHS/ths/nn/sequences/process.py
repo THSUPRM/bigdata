@@ -489,7 +489,7 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
                       "\nWeights:\n" + str(NN.model.get_weights()) + "\nToJson:\n" +
                       json.dumps(NN.model.to_json(), indent=4, sort_keys=True))
 
-            if len(models) < 6:
+            if len(models) < 9:
                 models.append(model)
             else:
                 models.append(model)
