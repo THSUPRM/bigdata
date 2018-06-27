@@ -394,16 +394,26 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
         Y_mapped = np.array(Y_all)
 
         num_data = len(X_all)
-        test_count = math.floor(num_data * 0.20)
-        cross_validation_count = test_count
 
-        # data set for test the model
+        test_count = math.floor(num_data * 0.20)
+
+        # TEST SET -> data set for test the model
+        X_test = X_mapped[0:test_count]
         Y_test = Y_mapped[0:test_count]
 
-        # data set for training and cross validation
-        X_train_cross = X_mapped[test_count:]
+        # print("Len:" + str(len(X_test)) + " ARRAY:" + str(X_test))
 
-        Y_train_cross = Y_mapped[test_count:]
+        # CROSS VALIDATION SET -> data set for validate the model
+        X_valid = X_mapped[(test_count+1):(test_count*2)]
+        Y_valid = Y_mapped[(test_count+1):(test_count*2)]
+
+        # print("Len:" + str(len(X_valid)) + " ARRAY:" + str(X_valid))
+
+        # TRAINING SET -> data set for training and cross validation
+        X_train = X_mapped[(test_count*2)+1:]
+        Y_train = Y_mapped[(test_count*2)+1:]
+
+        # print("Len:" + str(len(X_train)) + " ARRAY:" + str(X_train))
 
         NN = TweetSentiment2LSTMHyper(max_len, G)
 
@@ -411,7 +421,7 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
         l = list()
         params = self.getmatrixhyperparam(num_params)
         models = list()
-        for combination in itertools.islice(params, 7):
+        for combination in itertools.islice(params, 8):
         #for combination in params:
             start_time_comb = time.time()
 
@@ -458,19 +468,33 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
             if l[3] != 0:
                 params_fit['batch_size'] = l[3]
 
-            NN.fit(X_train, Y_train, epochs=l[2], validation_split=0.2, callbacks=[history], **params_fit)
+            NN.fit(X_train, Y_train, epochs=l[2], callbacks=[history], **params_fit)
 
-            model = [history.history['acc'][0], history.history['val_acc'][0], history.history['precision'][0],
+            indicators = NN.evaluate(X_valid, Y_valid)
+
+            print("METRIC NAMES: ", NN.get_model().metrics_names)
+            print("ACCURACY: ", indicators)
+
+            model = [indicators[0], # Loss
+                     indicators[1], # Accuracy
+                     indicators[2], # Precision
+                     indicators[3], # Recall
+                     indicators[4], # f1 Score
+                     indicators[5], # False positive rate
                      desc, NN.model.get_weights(), NN.model.to_json()]
 
-            log.write("\nacc: " + str(history.history['acc'][0]) + "\nval_acc: " + str(history.history['val_acc'][0]) +
-                      "\nModel:" + str(desc))
+            log.write("\nloss: " + str(indicators[0]) + "\nacc: " + str(indicators[1]) + "\nprec: " + str(indicators[2]) +
+                      "\nRecall: " + str(indicators[3]) + "\nf1: " + str(indicators[4]) +
+                      "\nfprate: " + str(indicators[5]) + "\nModel: " + str(desc) +
+                      "\nWeights:\n" + str(NN.model.get_weights()) + "\nToJson:\n" +
+                      json.dumps(NN.model.to_json(), indent=4, sort_keys=True))
 
             if len(models) < 6:
                 models.append(model)
             else:
                 models.append(model)
-                models = sorted(models, key=itemgetter(1, 0, 2))
+                models = sorted(models, key=itemgetter(1, 4, 3, 5))
+                print("Will erase: " + str(models[3]))
                 models.pop(3)
 
             # print("HISTORY history: " + str(history.history['acc'][0]-history.history['val_acc'][0]))
@@ -507,12 +531,15 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
 
         for m in models:
             file.write("----------------------------------------------------------------------------------------------")
-            file.write("\nacc: " + str(m[0]))
-            file.write("\nval_acc: " + str(m[1]))
-            file.write("\ndiff_acc: " + str(m[2]))
-            file.write("\nmodel: " + str(m[3]))
-            file.write("\nweights: " + str(m[4]))
-            file.write("\nJSON: " + json.dumps(m[5], indent=4, sort_keys=True))
+            file.write("\nloss: "   + str(m[0]))
+            file.write("\nacc: "    + str(m[1]))
+            file.write("\nprec: "   + str(m[2]))
+            file.write("\nRecall: " + str(m[3]))
+            file.write("\nf1: "     + str(m[4]))
+            file.write("\nfprate: " + str(m[5]))
+            file.write("\nmodel: "  + str(m[6]))
+            file.write("\nweights: " + str(m[7]))
+            file.write("\nJSON: "   + json.dumps(m[8], indent=4, sort_keys=True))
             file.write("\n----------------------------------------------------------------------------------------------")
 
         file.write("\nStart TOTAL execution time: " + str(start_time_comp))

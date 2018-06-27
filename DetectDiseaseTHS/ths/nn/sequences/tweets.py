@@ -216,6 +216,9 @@ class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
     def __init__(self, max_sentence_len, embedding_builder):
         super().__init__(max_sentence_len, embedding_builder)
 
+    def get_model(self):
+        return self.model
+
     def build(self, layer_units_1=0, kernel_reg_1=0, recu_dropout_1=0, dropout_1=0, layer_units_2=0, kernel_reg_2=0,
               recu_dropout_2=0, dropout_2=0, dense_layer_1=0, regula_dense_1=0, dense_layer_2=0):
 
