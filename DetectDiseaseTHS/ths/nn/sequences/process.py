@@ -115,25 +115,27 @@ class ProcessTweetsGloveOnePassHyperParam:
         a = [
             ['learningRate' ,0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
             ['momentum'     ,0.09, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.9, 1],
-            ['epochs'       ,1, 10, 30, 70, 85, 100, 120],
-            ['batchSize'    ,0, 5, 32, 50, 64, 80, 100],
+            ['epochs'       ,1, 20, 40, 60, 80, 100],
+            ['batchSize'    ,0, 1, 2, 8, 16, 32, 64],
             #LSTM1
-            ['layerUnits1'  ,10, 30, 48, 60, 80, 100],
-            ['kernelReg1'   ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
-            ['recuDropout1' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
+            ['layerUnits1'  ,50], #igual que el numero del glove
+            ['kernelReg1'   ,0],
+            #['kernelReg1'   ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
+            ['recuDropout1' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
             #Dropout1
-            ['dropout1'     ,0, 0.01, 0.09, 0.1, 0.4, 0.8, 1],
+            ['dropout1'     ,0, 0.01, 0.09, 0.1, 0.4, 0.5],
             #LSTM2
-            ['layerUnits2'  ,10, 30, 48, 60, 80, 100],
-            ['kernelReg2'   ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
-            ['recuDropout2' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
+            ['layerUnits2'  ,50, 40, 30, 20, 10, 5, 1],
+            ['kernelReg1'   ,0],
+            #['kernelReg2'   ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
+            ['recuDropout2' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
             #Dropout2
-            ['dropout2'     ,0, 0.01, 0.09, 0.1, 0.4, 0.8, 1],
+            ['dropout2'     ,0, 0.01, 0.09, 0.1, 0.4, 0.5],
             # DenseLayer1
-            ['denseLayer1'  ,1, 5, 10, 30, 40, 60],
-            ['regulaDense1' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
+            ['denseLayer1'  ,1, 2, 8, 16, 32, 64, 128],
+            ['regulaDense1' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
             #DenseLayer2
-            ['denseLayer2'  ,3],
+            ['denseLayer2'  ,1],
             #Optimizer
             ['optimizer', self.optimizer]
             ]
@@ -227,7 +229,7 @@ class ProcessTweetsGloveOnePassHyperParam:
                 params_compile['optimizer'] = adam
                 desc = desc + "\nADAM with learning rate: " + str(l[0]) + " beta_1=0.9, beta_2=0.999"
 
-            NN.compile(loss="categorical_crossentropy", metrics=['accuracy'], **params_compile)
+            NN.compile(loss="binary_crossentropy", metrics=['accuracy'], **params_compile)
 
             history = History()
             desc = desc + "\nEpochs: " + str(l[2]) + " Batch Size: " + str(l[3])
@@ -237,7 +239,7 @@ class ProcessTweetsGloveOnePassHyperParam:
             if l[3] != 0:
                 params_fit['batch_size'] = l[3]
 
-            NN.fit(X_train, Y_train, epochs=l[2], validation_split=0.3, callbacks=[history], **params_fit)
+            NN.fit(X_train, Y_train, epochs=l[2], validation_split=0.2, callbacks=[history], **params_fit)
 
             model = [history.history['acc'][0], history.history['val_acc'][0],
                      history.history['acc'][0]-history.history['val_acc'][0], desc, NN.model.get_weights(), NN.model.to_json()]

@@ -241,12 +241,12 @@ class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
         #Dense Layer 2
         X = self.create_dense(X, dense_layer_2, 0, False, None, 'dense_2')
 
-        X = BatchNormalization()(X)
-        self.model_created = self.model_created + "\nBatch Normalization"
-        X = Activation("softmax", name="softmax_final")(X)
-        self.model_created = self.model_created + "\nActivation type: Softmax"
-        self.model = Model(input=sentence_input, output=X)
+        # X = BatchNormalization()(X)
+        # self.model_created = self.model_created + "\nBatch Normalization"
 
+        X = self.activation(X, dense_layer_2, 'act')
+
+        self.model = Model(input=sentence_input, output=X)
         return self.model_created
 
     def create_LSTM(self, input, layer_units, kernel_reg, recu_dropout, return_sequences, name):
@@ -297,6 +297,19 @@ class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
         except Exception as e:
             print(e)
             print("ERROR creating Dense layer in the model")
+        return X
+
+    def activation(self, input, dense_layer_2, name):
+        try:
+            if dense_layer_2 == 1:
+                X = Activation("sigmoid", name=name)(input)
+                self.model_created = self.model_created + "\nActivation type: Sigmoid"
+            elif dense_layer_2 > 1:
+                X = Activation("softmax", name=name)(input)
+                self.model_created = self.model_created + "\nActivation type: Softmax"
+        except Exception as e:
+            print(e)
+            print("ERROR setting the activation layer in the model")
         return X
 
 
