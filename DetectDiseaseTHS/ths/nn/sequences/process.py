@@ -1,6 +1,7 @@
 from ths.nn.sequences.tweets import *
 from ths.utils.files import GloveEmbedding
 from ths.utils.sentences import SentenceToIndices, PadSentences
+from ths.nn.metrics.multiple import *
 from keras import backend as KerasBack
 from keras.callbacks import TensorBoard
 from keras.optimizers import SGD, Adam, RMSprop, Adadelta
@@ -192,8 +193,8 @@ class ProcessTweetsGloveOnePassHyperParam:
         l = list()
         params = self.getmatrixhyperparam(num_params)
         models = list()
-        # for combination in itertools.islice(params, 7):
-        for combination in params:
+        for combination in itertools.islice(params, 7):
+        #for combination in params:
             start_time_comb = time.time()
 
             log = open("models/model" + str(combination).replace(" ", "") + ".txt", "a+")
@@ -229,7 +230,7 @@ class ProcessTweetsGloveOnePassHyperParam:
                 params_compile['optimizer'] = adam
                 desc = desc + "\nADAM with learning rate: " + str(l[0]) + " beta_1=0.9, beta_2=0.999"
 
-            NN.compile(loss="binary_crossentropy", metrics=['accuracy'], **params_compile)
+            NN.compile(loss="binary_crossentropy", metrics=['accuracy', precision, recall, f1, fprate], **params_compile)
 
             history = History()
             desc = desc + "\nEpochs: " + str(l[2]) + " Batch Size: " + str(l[3])
@@ -241,8 +242,7 @@ class ProcessTweetsGloveOnePassHyperParam:
 
             NN.fit(X_train, Y_train, epochs=l[2], validation_split=0.2, callbacks=[history], **params_fit)
 
-            model = [history.history['acc'][0], history.history['val_acc'][0],
-                     history.history['acc'][0]-history.history['val_acc'][0], desc, NN.model.get_weights(), NN.model.to_json()]
+            model = [history.history['acc'][0], history.history['val_acc'][0], history.history['precision'][0], desc, NN.model.get_weights(), NN.model.to_json()]
 
             log.write("\nacc: " + str(history.history['acc'][0]) + "\nval_acc: " + str(history.history['val_acc'][0]) +
                       "\ndiff_acc: " + str(history.history['val_acc'][0]-history.history['acc'][0]) + "\nModel:" + str(desc))
