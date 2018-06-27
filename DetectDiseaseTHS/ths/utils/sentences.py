@@ -22,12 +22,19 @@ class SentenceToIndices:
     def map_sentence_list(self, sentence_list):
         result = []
         max_len = 0
+        counter_len = 0.0
+        total_len = 0.0
         for s in sentence_list:
             mapped = self.map_sentence(s)
             mapped_len = len(mapped)
+            counter_len = counter_len + 1
+            total_len = total_len + mapped_len
             if mapped_len > max_len:
                 max_len = mapped_len
+                max_s = s
             result.append(mapped)
+        # print("max_len: ", max_len)
+        # print("avg_len: ", total_len/counter_len)
         return result, max_len
 
 class PadSentences:
@@ -79,4 +86,19 @@ class SentenceToEmbedding:
         return matrix
 
 
+class TrimSentences:
+    def __init__(self, trim_size):
+        self.trim_size = trim_size
 
+    def trim(self, sentence):
+        if len(sentence) > self.trim_size:
+            return sentence[:self.trim_size]
+        else:
+            return sentence
+
+    def trim_list(self, sentence_list):
+        result = []
+        for s in sentence_list:
+            temp = self.trim(s)
+            result.append(temp)
+        return result
