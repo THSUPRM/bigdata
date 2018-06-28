@@ -421,7 +421,7 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
         l = list()
         params = self.getmatrixhyperparam(num_params)
         models = list()
-        for combination in itertools.islice(params, 8):
+        for combination in itertools.islice(params, 10):
         #for combination in params:
             start_time_comb = time.time()
 
@@ -489,7 +489,7 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
                       "\nWeights:\n" + str(NN.model.get_weights()) + "\nToJson:\n" +
                       json.dumps(NN.model.to_json(), indent=4, sort_keys=True))
 
-            if len(models) < 9:
+            if len(models) < 8:
                 models.append(model)
             else:
                 models.append(model)
