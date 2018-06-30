@@ -421,8 +421,8 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
         l = list()
         params = self.getmatrixhyperparam(num_params)
         models = list()
-        for combination in itertools.islice(params, 10):
-        #for combination in params:
+        #for combination in itertools.islice(params, 50):
+        for combination in params:
             start_time_comb = time.time()
 
             log = open("models/model" + str(combination).replace(" ", "") + ".txt", "a+")
@@ -494,7 +494,7 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
             else:
                 models.append(model)
                 models = sorted(models, key=itemgetter(1, 4, 3, 5))
-                print("Will erase: " + str(models[3]))
+                # print("Will erase: " + str(models[3]))
                 models.pop(3)
 
             # print("HISTORY history: " + str(history.history['acc'][0]-history.history['val_acc'][0]))
