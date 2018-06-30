@@ -415,6 +415,35 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
 
         # print("Len:" + str(len(X_train)) + " ARRAY:" + str(X_train))
 
+        # Save all data set in files
+        # Save TEST Files
+        file = open("models/X_test.txt", "w")
+        for item in X_test:
+            file.write("%s\n" % item)
+        file.close()
+        file = open("models/Y_test.txt", "w")
+        for item in Y_test:
+            file.write("%s\n" % item)
+        file.close()
+        # Save Cross Validation Files
+        file = open("models/X_validation.txt", "w")
+        for item in X_valid:
+            file.write("%s\n" % item)
+        file.close()
+        file = open("models/Y_validation.txt", "w")
+        for item in Y_valid:
+            file.write("%s\n" % item)
+        file.close()
+        # Save Training Files
+        file = open("models/X_training.txt", "w")
+        for item in X_train:
+            file.write("%s\n" % item)
+        file.close()
+        file = open("models/Y_training.txt", "w")
+        for item in Y_train:
+            file.write("%s\n" % item)
+        file.close()
+
         NN = TweetSentiment2LSTMHyper(max_len, G)
 
         num_params = 16
