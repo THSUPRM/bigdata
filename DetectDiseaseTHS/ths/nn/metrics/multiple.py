@@ -89,3 +89,4 @@ def fprate(y_true, y_pred):
     all_negatives = K.sum(y_false)
     fpr = false_positive / (all_negatives + K.epsilon())
     return fpr
+############################# Second Implementation Working #############################
