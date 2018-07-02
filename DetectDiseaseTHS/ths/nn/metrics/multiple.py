@@ -41,7 +41,7 @@ from keras import backend as K
 #     fprate = false_positive / (possible_negatives  + K.epsilon())
 #     return fprate
 
-############################# Second Implementation #############################
+############################# Second Implementation Working #############################
 def precision(y_true, y_pred):
     #predicted positives
     predictions = K.round(y_pred)
