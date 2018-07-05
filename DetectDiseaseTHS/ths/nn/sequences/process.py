@@ -319,30 +319,28 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
 
     def getmatrixhyperparam(self, i=1):
         a = [
-            ['learningRate' ,0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
-            ['momentum'     ,0.09, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.9, 1],
-            ['epochs'       ,1, 20, 40, 60, 80, 100],
-            ['batchSize'    ,0, 1, 2, 8, 16, 32, 64],
-            #LSTM1
-            ['layerUnits1'  ,50], #igual que el numero del glove
-            ['kernelReg1'   ,0],
-            #['kernelReg1'   ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
-            ['recuDropout1' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
-            #Dropout1
-            ['dropout1'     ,0, 0.01, 0.09, 0.1, 0.4, 0.5],
-            #LSTM2
-            ['layerUnits2'  ,50, 40, 30, 20, 10, 5, 1],
-            ['kernelReg1'   ,0],
-            #['kernelReg2'   ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
-            ['recuDropout2' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
-            #Dropout2
-            ['dropout2'     ,0, 0.01, 0.09, 0.1, 0.4, 0.5],
+            ['learningRate',    0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1],
+            ['momentum',        0],
+            ['epochs',          1, 20, 40, 60],
+            ['batchSize',       32],
+            # LSTM1
+            ['layerUnits1',     50],  # the same that the glove number
+            ['kernelReg1',      0],
+            ['recuDropout1',    0],
+            # Dropout1
+            ['dropout1',        0, 0.1, 0.3, 0.5],
+            # LSTM2
+            ['layerUnits2',     50],
+            ['kernelReg1',      0],
+            ['recuDropout2',    0],
+            # Dropout2
+            ['dropout2',        0, 0.1, 0.3, 0.5],
             # DenseLayer1
-            ['denseLayer1'  ,2, 8, 16, 32, 64, 128],
-            ['regulaDense1' ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
-            #DenseLayer2
-            ['denseLayer2'  ,1],
-            #Optimizer
+            ['denseLayer1',     32, 64],
+            ['regulaDense1',    0],
+            # DenseLayer2
+            ['denseLayer2',     1],
+            # Optimizer
             ['optimizer', self.optimizer]
             ]
 
@@ -450,11 +448,11 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
         l = list()
         params = self.getmatrixhyperparam(num_params)
         models = list()
-        #for combination in itertools.islice(params, 50):
+        # for combination in itertools.islice(params, 10):
         for combination in params:
             start_time_comb = time.time()
-
-            log = open("models/model" + str(combination).replace(" ", "") + ".txt", "a+")
+            file_name = "models/model" + str(combination).replace(" ", "") + ".txt"
+            log = open(file_name, "a+")
             log.write("Start time: " + str(datetime.now()))
             log.write("\nCOMBINATION: " + str(combination))
 
@@ -510,7 +508,7 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
                      indicators[3], # Recall
                      indicators[4], # f1 Score
                      indicators[5], # False positive rate
-                     desc, NN.model.get_weights(), NN.model.to_json()]
+                     file_name, desc, NN.model.get_weights(), NN.model.to_json()]
 
             log.write("\nloss: " + str(indicators[0]) + "\nacc: " + str(indicators[1]) + "\nprec: " + str(indicators[2]) +
                       "\nRecall: " + str(indicators[3]) + "\nf1: " + str(indicators[4]) +
@@ -559,17 +557,18 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
         file = open("models/bestModel" + str(datetime.now())[:19].replace(" ", "T") + ".txt", "a+")
 
         for m in models:
-            file.write("----------------------------------------------------------------------------------------------")
-            file.write("\nloss: "   + str(m[0]))
-            file.write("\nacc: "    + str(m[1]))
-            file.write("\nprec: "   + str(m[2]))
-            file.write("\nRecall: " + str(m[3]))
-            file.write("\nf1: "     + str(m[4]))
-            file.write("\nfprate: " + str(m[5]))
-            file.write("\nmodel: "  + str(m[6]))
-            file.write("\nweights: " + str(m[7]))
-            file.write("\nJSON: "   + json.dumps(m[8], indent=4, sort_keys=True))
-            file.write("\n----------------------------------------------------------------------------------------------")
+            file.write("--------------------------------------------------------------------------------------------")
+            file.write("\nloss: "       + str(m[0]))
+            file.write("\nacc: "        + str(m[1]))
+            file.write("\nprec: "       + str(m[2]))
+            file.write("\nRecall: "     + str(m[3]))
+            file.write("\nf1: "         + str(m[4]))
+            file.write("\nfprate: "     + str(m[5]))
+            file.write("\nfileName: "   + str(m[6]))
+            file.write("\nmodel: "      + str(m[7]))
+            file.write("\nweights: "    + str(m[8]))
+            file.write("\nJSON: "       + json.dumps(m[9], indent=4, sort_keys=True))
+            file.write("\n--------------------------------------------------------------------------------------------")
 
         file.write("\nStart TOTAL execution time: " + str(start_time_comp))
         file.write("\nTOTAL execution time: {} hours".format((time.time() - start_time_total) / (60 * 60)))
