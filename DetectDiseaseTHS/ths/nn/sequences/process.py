@@ -321,7 +321,7 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
         a = [
             ['learningRate',    0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1],
             ['momentum',        0],
-            ['epochs',          1, 20, 40, 60],
+            ['epochs',          5, 10, 20, 40, 60],
             ['batchSize',       32],
             # LSTM1
             ['layerUnits1',     50],  # the same that the glove number
