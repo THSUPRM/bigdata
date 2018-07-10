@@ -1,3 +1,5 @@
+#Instructions to run
+
 In this folder is all code necessary to collect the Tweets from Twitter Streaming API save in Hive, process the data collected and create the new tables in Hive, save the aggregate counts in some new tables in Postgresql to show in the dashboard to the final client, all those scripts could run in the client node 136.145.115.135.
 
 1.	Run “1.Producer_full_text.py” with this command: 
