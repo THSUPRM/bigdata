@@ -447,9 +447,16 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
         num_params = 16
         l = list()
         params = self.getmatrixhyperparam(num_params)
+        # longi = sum(1 for x in params)
+        # print("LONGITUD PARAMS: " + str(longi))
         models = list()
-        # for combination in itertools.islice(params, 10):
-        for combination in params:
+        # for combination in itertools.islice(params, 10, 20):    # -> Basic test
+        for combination in itertools.islice(params, 224):       # -> 1st host
+        # for combination in itertools.islice(params, 225, 448):  # -> 2nd host
+        # for combination in itertools.islice(params, 449, 672):  # -> 3th host
+        # for combination in itertools.islice(params, 673, 896):  # -> 4th host
+        # for combination in itertools.islice(params, 897, 1120):  # -> 5th host
+        #for combination in params:
             start_time_comb = time.time()
             file_name = "models/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
