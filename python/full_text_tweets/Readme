@@ -1,3 +1,0 @@
-Modifications to the code to read full text from Twitter API
-
-When new database is use to save the tweets ise neccesary modify the metastore in MYSQL, the table to modify is metastore.DBS

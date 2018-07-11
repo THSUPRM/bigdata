@@ -37,7 +37,6 @@ def insertRawTweets(rdd, spark, time):
 	print("Inserted raw_tweet")
 
 def insertTweets(rdd, spark, time):
-	rdd = rdd.map(lambda sn: [' '.join(filter(lambda x: x.startswith(('http')) == False, sn[0].split() )), sn[1]] )
 	rdd = rdd.filter(lambda x: ("zika" in str(x["extended_tweet"]["full_text"]).lower() or "flu" in str(x["extended_tweet"]["full_text"]).lower() or "ebola" in str(x["extended_tweet"]["full_text"]).lower() or "measles" in str(x["extended_tweet"]["full_text"]).lower() or "diarrhea" in str(x["extended_tweet"]["full_text"]).lower() ) == True )
 	if(rdd.count()>0):
 		df = spark.createDataFrame(rdd.map(lambda x: Row(twitter_id=x["id_str"], user_twitter_id=x["user"]["id_str"], full_text=str(x["extended_tweet"]["full_text"]), is_retweet=x["retweeted"], is_reply="in_reply_to_screen_name" in x, is_favorite=x["favorited"] == "true", is_decomposed=False)))
