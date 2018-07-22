@@ -446,17 +446,37 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
 
         num_params = 16
         l = list()
-        params = self.getmatrixhyperparam(num_params)
+        # params = self.getmatrixhyperparam(num_params)
+
+        #BEST MODELS
+        params = [    (0.003,0,20,32,50,0,0,0.1,50,0,0,0.1,64,0,1,'RMSPROP')
+                     ,(0.001,0,60,32,50,0,0,0.5,50,0,0,0.5,64,0,1,'RMSPROP')
+                     ,(0.001,0,5,32,50,0,0,0.3,50,0,0,0.1,32,0,1,'RMSPROP')
+                     ,(0.001,0,20,32,50,0,0,0.5,50,0,0,0.5,32,0,1,'RMSPROP')
+                     ,(0.001,0,60,32,50,0,0,0.3,50,0,0,0.1,64,0,1,'RMSPROP') ]
+
+        #Modelos restantes
+        params = [   (0.003, 0, 20, 32, 50, 0, 0, 0, 50, 0, 0, 0, 32, 0, 1, 'RMSPROP')
+                    ,(0.01, 0, 60, 32, 50, 0, 0, 0, 50, 0, 0, 0, 32, 0, 1, 'RMSPROP')
+                    ,(0.1, 0, 10, 32, 50, 0, 0, 0, 50, 0, 0, 0, 32, 0, 1, 'RMSPROP')
+                    ,(0.3, 0, 40, 32, 50, 0, 0, 0, 50, 0, 0, 0, 32, 0, 1, 'RMSPROP') ]
+
         # longi = sum(1 for x in params)
         # print("LONGITUD PARAMS: " + str(longi))
+
+        # for combination in params:
+        #     print(type(combination))
+        #     print(str(combination).replace(" ", ""))
+
+
         models = list()
         # for combination in itertools.islice(params, 10, 20):    # -> Basic test
-        for combination in itertools.islice(params, 224):       # -> 1st host
+        # for combination in itertools.islice(params, 224):       # -> 1st host
         # for combination in itertools.islice(params, 225, 448):  # -> 2nd host
         # for combination in itertools.islice(params, 449, 672):  # -> 3th host
         # for combination in itertools.islice(params, 673, 896):  # -> 4th host
         # for combination in itertools.islice(params, 897, 1120):  # -> 5th host
-        #for combination in params:
+        for combination in params:
             start_time_comb = time.time()
             file_name = "models/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
