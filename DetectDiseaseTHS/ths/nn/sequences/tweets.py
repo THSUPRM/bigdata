@@ -4,6 +4,7 @@ np.random.seed(10)
 from keras.models import Model
 from keras.models import Sequential
 from keras.layers import Dense, Input, Dropout, LSTM, Activation, Bidirectional, BatchNormalization, Embedding
+from keras.layers import Permute, Multiply, TimeDistributed
 from keras.optimizers import RMSprop
 from keras.regularizers import l2
 from datetime import datetime
@@ -220,7 +221,7 @@ class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
         return self.model
 
     def build(self, layer_units_1=0, kernel_reg_1=0, recu_dropout_1=0, dropout_1=0, layer_units_2=0, kernel_reg_2=0,
-              recu_dropout_2=0, dropout_2=0, dense_layer_1=0, regula_dense_1=0, dense_layer_2=0):
+              recu_dropout_2=0, dropout_2=0, dense_layer_1=0, regula_dense_1=0, dense_layer_2=0, attention=False):
 
         self.model_created = ""
 
@@ -235,6 +236,9 @@ class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
         X = self.create_LSTM(input, layer_units_1, kernel_reg_1, recu_dropout_1, True, 'LSTM_1')
         # Dropout 1
         X = self.create_dropout(X, dropout_1, 'dropout_1')
+        # Attention
+        if attention:
+            X = self.create_attention(X)
         # LSTM 2
         X = self.create_LSTM(X, layer_units_2, kernel_reg_2, recu_dropout_2, False, 'LSTM_2')
         # Dropout 2
@@ -314,6 +318,19 @@ class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
             print(e)
             print("ERROR setting the activation layer in the model")
         return X
+
+    def create_attention(self, input):
+        try:
+            attention = Permute((2, 1), name="Attention_Permute")(input)
+            attention = TimeDistributed(Dense(self.max_sentence_len, activation='softmax', name="Attention_Dense"))(
+                attention)
+            attention_probs = Permute((2, 1), name='attention_probs')(attention)
+
+            output_attention_mul = Multiply(name='attention_multiplu')([input, attention_probs])
+        except Exception as e:
+            print(e)
+            print("ERROR setting the attention layer in the model")
+        return output_attention_mul
 
 
 class TweetSentiment2LSTMMaxDenseBidirectional(TweetSentiment2LSTM):
