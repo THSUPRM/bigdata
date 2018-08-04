@@ -10,6 +10,7 @@ from keras.callbacks import History
 
 max_words = 10000
 
+
 def main():
         np.random.seed(11)
         X_all = []
@@ -40,6 +41,7 @@ def main():
         X_all = tokenizer.sequences_to_matrix(X_Seq_All, mode='binary')
         print("train_x[0]", X_all[0])
         print("TYPE ALL:", type(X_all))
+        print("LONGITUD X_ALL: ", len(X_all))
         print("train_y[0]", X_all[0])
 
         num_data = len(X_all)
@@ -47,6 +49,8 @@ def main():
         # print("TOTAL DATA: ", num_data)
 
         test_count = math.floor(num_data * 0.20)
+
+        print("TEST COUNT: ", test_count)
 
         # TEST SET -> data set for test the model
         X_test = X_all[0:test_count]
@@ -69,6 +73,8 @@ def main():
         X_train = X_all[(test_count * 2) + 1:]
         Y_train = Y_all[(test_count * 2) + 1:]
 
+        print("LONGITUD X_TRAIN: ", len(X_train))
+
         print("Create Model")
         model = Sequential()
         model.add(Dense(1, input_dim=10000))
@@ -81,14 +87,12 @@ def main():
 
         history = History()
 
-        model.fit(X_train, Y_train, epochs=15, validation_split=0.20, callbacks=[history])
+        model.fit(X_train, Y_train, epochs=20, callbacks=[history])
 
         indicators = model.evaluate(X_valid, Y_valid)
 
         print("METRIC NAMES: ", model.metrics_names)
         print("ACCURACY: ", indicators)
-
-        print("Done")
 
 
 if __name__ == "__main__":

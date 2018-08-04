@@ -172,6 +172,12 @@ def main():
     from sklearn.metrics import accuracy_score
     acc_scikit = accuracy_score(Y_valid, predicted)
 
+    from sklearn.metrics import confusion_matrix
+    print("TYPE Y_valid:", type(Y_valid))
+    print("TYPE predicted:", type(predicted))
+    matrix = confusion_matrix(Y_valid, predicted)
+    print("MATRIX:", matrix)
+
     accuracy = met.accuracy(Y_valid, predicted)
     precision = met.precision_numpy(Y_valid, predicted)
     recall = met.recall_numpy(Y_valid, predicted)

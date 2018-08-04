@@ -1,0 +1,1 @@
+This folder is to save all test models with Logistic Regression models with all the metrics and weights respectively.
