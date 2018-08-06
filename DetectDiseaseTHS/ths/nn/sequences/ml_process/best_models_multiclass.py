@@ -22,8 +22,8 @@ class BestModelsMulticlass(TweetsProcessor):
             file_name = "models/RNN/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
             start_time_comb = datetime.now()
-            log.write("Start time: " + str(start_time_comb))
-            log.write("\nCOMBINATION: " + str(combination))
+            log.write("Start time: " + str(start_time_comb) + "\n")
+            log.write("\nCOMBINATION: " + str(combination) + "\n")
 
             l = list(combination)
 
@@ -61,16 +61,16 @@ class BestModelsMulticlass(TweetsProcessor):
             # Getting metrics
             acc = accuracy(self.y_valid, predicted)
             c_matrix = confusion_matrix(self.y_valid, predicted)
-            track = """ Confusion matrix : {}
-                        Model accuracy: {}""".format(c_matrix, acc)
+            track = ("Confusion matrix : \n{}\n"
+                     "Model accuracy: {}\n").format(c_matrix, acc)
 
             prec_1, recall_1, f1_1, spec_1, track = self.calculate_cm_metrics(c_matrix, track)
 
-            model = [acc,       # Accuracy
-                     prec_1,    # Precision
+            model = [acc,  # Accuracy
+                     prec_1,  # Precision
                      recall_1,  # Recall
-                     f1_1,      # F1 Score
-                     spec_1,    # Specificity
+                     f1_1,  # F1 Score
+                     spec_1,  # Specificity
                      file_name, desc]
 
             models.append(model)
@@ -82,4 +82,4 @@ class BestModelsMulticlass(TweetsProcessor):
                 ("\nExecution time: {} minutes".format(((datetime.now() - start_time_comb).total_seconds()) / 60)))
             log.write(("\nFinish time: " + str(datetime.now())))
             log.close()
-            return models
+        return models

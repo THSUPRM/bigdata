@@ -11,7 +11,7 @@ class TweetCleaner:
         self.output_name = output_name
 
     def clean(self):
-        with open(self.input_name, "r",  encoding="ISO-8859-1") as f1:
+        with open(self.input_name, "r") as f1:
             with open(self.output_name, "w") as f2:
                 reader = csv.reader(f1, delimiter='|')
                 writer = csv.writer(f2, delimiter=',')
@@ -28,7 +28,8 @@ class TweetCleaner:
                     tweet = re.sub(r'http\S+', '', tweet)
                     # third remove #hashtag with hash tag
                     # tweet = re.sub(r'#\S+', 'hastag', tweet)
-                    tweet = re.sub(r'#\S+', '', tweet)
+                    # tweet = re.sub(r'#\S+', '', tweet)
+                    tweet = tweet.replace("#", "")
                     # fourth remove @user with twitter user
                     # tweet = re.sub(r'@\S+', 'mention', tweet)
                     tweet = re.sub(r'@\S+', '', tweet)

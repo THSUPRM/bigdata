@@ -27,11 +27,9 @@ class TweetsProcessor:
     def process(self):
         self.num_params = 16
         self.params = self.get_best_models_params()
-
         self.load_data()
         x_train_pad, max_len, g = self.get_glove_embedding()
         self.nn = TweetSentiment2LSTMHyper(max_len, g)
-
         self.get_partitioned_sets(x_train_pad)
         self.define_and_save_dictionary_datasets()
         models = self.process_neural_network()
@@ -189,19 +187,19 @@ class TweetsProcessor:
         spec_1 = tn_1 / (tn_1 + c_matrix[0][1] + c_matrix[2][1])
         spec_2 = tn_2 / (tn_2 + c_matrix[0][2] + c_matrix[1][2])
 
-        t = track + """ Precision 0: {} 
-                        Precision 1: {}
-                        Precision 2: {}
-                        Recall 0: {}
-                        Recall 1: {}
-                        Recall 2: {}
-                        F1 Score 0: {}
-                        F1 Score 1: {}
-                        F1 Score 2: {}
-                        Specificity 0: {}
-                        Specificity 1: {}
-                        Specificity 2: {}""".format(prec_0, prec_1, prec_2, recall_0, recall_1, recall_2, f1_0, f1_1,
-                                                    f1_2, tn_0, tn_1, tn_2, spec_0, spec_1, spec_2)
+        t = track + ("Precision 0: {}\n" 
+                    "Precision 1: {}\n"
+                    "Precision 2: {}\n"
+                    "Recall 0: {}\n"
+                    "Recall 1: {}\n"
+                    "Recall 2: {}\n"
+                    "F1 Score 0: {}\n"
+                    "F1 Score 1: {}\n"
+                    "F1 Score 2: {}\n"
+                    "Specificity 0: {}\n"
+                    "Specificity 1: {}\n"
+                    "Specificity 2: {}\n").format(prec_0, prec_1, prec_2, recall_0, recall_1, recall_2, f1_0, f1_1,
+                                                    f1_2, spec_0, spec_1, spec_2)
         return prec_1, recall_1, f1_1, spec_1, t
 
     def get_hyper_params_matrix(self, i=1):

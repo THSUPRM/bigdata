@@ -34,7 +34,7 @@ class ProcessTweetsGlove:
         # open the file with tweets
         X_all = []
         Y_all = []
-        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+        with open(self.labeled_tweets_filename, "r") as f:
             i = 0
             csv_file = csv.reader(f, delimiter = ',')
             for r in csv_file:
@@ -119,7 +119,7 @@ class ProcessTweetsGloveOnePass:
         # open the file with tweets
         X_all = []
         Y_all = []
-        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+        with open(self.labeled_tweets_filename, "r") as f:
             i = 0
             csv_file = csv.reader(f, delimiter = ',')
             for r in csv_file:
@@ -201,7 +201,7 @@ class ProcessTweetsGloveOnePassParam:
         # open the file with tweets
         X_all = []
         Y_all = []
-        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+        with open(self.labeled_tweets_filename, "r") as f:
             i = 0
             csv_file = csv.reader(f, delimiter = ',')
             for r in csv_file:
@@ -300,7 +300,7 @@ class ProcessTweetsGloveOnePassHyperParamAllData:
         # open the file with tweets
         X_all = []
         Y_all = []
-        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+        with open(self.labeled_tweets_filename, "r") as f:
             i = 0
             csv_file = csv.reader(f, delimiter=',')
             for r in csv_file:
@@ -501,7 +501,7 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
         # open the file with tweets
         X_all = []
         Y_all = []
-        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+        with open(self.labeled_tweets_filename, "r") as f:
             i = 0
             csv_file = csv.reader(f, delimiter=',')
             for r in csv_file:
@@ -746,7 +746,7 @@ class ProcessTweetsGloveOnePassBestModels:
         Y_all = []
         all_data = []
 
-        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+        with open(self.labeled_tweets_filename, "r") as f:
             i = 0
             csv_file = csv.reader(f, delimiter=',')
             for r in csv_file:
@@ -988,7 +988,7 @@ class ProcessTweetsGloveOnePassBestModelsMulticlass:
         Y_all = []
         all_data = []
 
-        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+        with open(self.labeled_tweets_filename, "r") as f:
             i = 0
             csv_file = csv.reader(f, delimiter=',')
             for r in csv_file:
