@@ -253,7 +253,6 @@ class ProcessTweetsGloveOnePassHyperParamAllData:
         self.embedding_filename = embedding_filename
         self.optimizer = optimizer
 
-
     def getmatrixhyperparam(self, i=1):
         a = [
             ['learningRate' ,0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.7, 1],
@@ -764,7 +763,7 @@ class ProcessTweetsGloveOnePassBestModels:
         for r in all_data:
             tweet = r[0].strip()
             label = int(r[1])
-            if (label == 2):
+            if label == 2:
                 label = 0
             X_all.append(str(tweet).strip())
             Y_all.append(label)
@@ -1007,7 +1006,8 @@ class ProcessTweetsGloveOnePassBestModelsMulticlass:
         for r in all_data:
             tweet = r[0].strip()
             label = int(r[1])
-
+            X_all.append(str(tweet).strip())
+            Y_all.append(label)
             if label == 0:
                 zeros_count += 1
             elif label == 1:
@@ -1015,15 +1015,11 @@ class ProcessTweetsGloveOnePassBestModelsMulticlass:
             elif label == 2:
                 twos_count += 1
 
-            X_all.append(str(tweet).strip())
-            Y_all.append(label)
-
-        print("LEN X_all:" , len(X_all))
-        print("LEN Y_all:", len(Y_all))
-        print("Y_all ZEROS: ", zeros_count)
-        print("Y_all ONES: ", ones_count)
-        print("Y_all TWOS: ", twos_count)
-
+        # print("LEN X_all:" , len(X_all))
+        # print("LEN Y_all:", len(Y_all))
+        # print("Y_all ZEROS: ", zeros_count)
+        # print("Y_all ONES: ", ones_count)
+        # print("Y_all TWOS: ", twos_count)
 
         class_weight_val = class_weight.compute_class_weight('balanced', np.unique(Y_all), Y_all)
         class_weight_dictionary = {0: class_weight_val[0], 1: class_weight_val[1], 2: class_weight_val[2]}
@@ -1093,35 +1089,34 @@ class ProcessTweetsGloveOnePassBestModelsMulticlass:
 
         # Save all data set in files
         # Save TEST Files
-        file = open("models/X_test.txt", "w")
+        file = open("models/RNN/X_test.txt", "w")
         for item in X_test:
             file.write("%s\n" % item)
         file.close()
-        file = open("models/Y_test.txt", "w")
+        file = open("models/RNN/Y_test.txt", "w")
         for item in Y_test:
             file.write("%s\n" % item)
         file.close()
         # Save Cross Validation Files
-        file = open("models/X_validation.txt", "w")
+        file = open("models/RNN/X_validation.txt", "w")
         for item in X_valid:
             file.write("%s\n" % item)
         file.close()
-        file = open("models/Y_validation.txt", "w")
+        file = open("models/RNN/Y_validation.txt", "w")
         for item in Y_valid:
             file.write("%s\n" % item)
         file.close()
         # Save Training Files
-        file = open("models/X_training.txt", "w")
+        file = open("models/RNN/X_training.txt", "w")
         for item in X_train:
             file.write("%s\n" % item)
         file.close()
-        file = open("models/Y_training.txt", "w")
+        file = open("models/RNN/Y_training.txt", "w")
         for item in Y_train:
             file.write("%s\n" % item)
         file.close()
 
         NN = TweetSentiment2LSTMHyper(max_len, G)
-
         num_params = 16
 
         #BEST MODELS
@@ -1234,7 +1229,6 @@ class ProcessTweetsGloveOnePassBestModelsMulticlass:
 
             models.append(model)
             models = sorted(models, key=itemgetter(3, 2, 1))
-
 
             KerasBack.clear_session()
             print("Done and Cleared Keras!")
