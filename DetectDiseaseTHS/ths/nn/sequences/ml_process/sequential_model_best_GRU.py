@@ -12,9 +12,9 @@ from ths.nn.sequences.tweets import *
 from ths.nn.sequences.ml_process.tweets_processor import TweetsProcessor
 
 
-class BestModelsMulticlass(TweetsProcessor):
+class SequentialModelBestGRU(TweetsProcessor):
     def process_neural_network(self, max_len, g):
-        self.nn = TweetSentiment2LSTMHyper(max_len, g)
+        self.nn = TweetSentiment2LSTMMaxDenseSequential(max_len, g)
         models = list()
 
         class_weight_val = class_weight.compute_class_weight('balanced', np.unique(self.y_all), self.y_all)
@@ -29,7 +29,9 @@ class BestModelsMulticlass(TweetsProcessor):
 
             l = list(combination)
 
-            desc = self.nn.build(layer_units_1=l[4], kernel_reg_1=l[5], recu_dropout_1=l[6], dropout_1=l[7],
+            desc = ""
+
+            self.nn.build(layer_units_1=l[4], kernel_reg_1=l[5], recu_dropout_1=l[6], dropout_1=l[7],
                                  layer_units_2=l[8], kernel_reg_2=l[9], recu_dropout_2=l[10], dropout_2=l[11],
                                  dense_layer_1=l[12], regula_dense_1=l[13], dense_layer_2=l[14], attention=True)
 

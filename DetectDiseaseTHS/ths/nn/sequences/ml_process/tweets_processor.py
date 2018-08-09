@@ -13,11 +13,12 @@ from ths.utils.sentences import SentenceToIndices, PadSentences, TrimSentences
 
 
 class TweetsProcessor:
-    def __init__(self, labeled_tweets_filename, embedding_filename, optimizer):
+    def __init__(self, labeled_tweets_filename, embedding_filename, optimizer, route_files):
         self.labeled_tweets_filename = labeled_tweets_filename
         self.embedding_filename = embedding_filename
         self.optimizer = optimizer
         self.start_time_comp = datetime.now()
+        self.route_files = route_files
         np.random.seed(11)
 
     @abstractmethod
@@ -29,10 +30,9 @@ class TweetsProcessor:
         self.params = self.get_best_models_params()
         self.load_data()
         x_train_pad, max_len, g = self.get_glove_embedding()
-        self.nn = TweetSentiment2LSTMHyper(max_len, g)
         self.get_partitioned_sets(x_train_pad)
         self.define_and_save_dictionary_datasets()
-        models = self.process_neural_network()
+        models = self.process_neural_network(max_len, g)
         self.save_best_models_file(models)
 
     def load_data(self):
@@ -40,7 +40,7 @@ class TweetsProcessor:
         self.y_all = []
         self.all_data = []
 
-        with open(self.labeled_tweets_filename, "r", encoding="ISO-8859-1") as f:
+        with open(self.labeled_tweets_filename, "r") as f:
             i = 0
             csv_file = csv.reader(f, delimiter=',')
             for r in csv_file:
@@ -141,12 +141,12 @@ class TweetsProcessor:
 
     def define_and_save_dictionary_datasets(self):
         sets = {
-            "models/RNN/x_test.txt": self.x_test,
-            "models/RNN/y_test.txt": self.y_test,
-            "models/RNN/x_validation.txt": self.x_valid,
-            "models/RNN/y_validation.txt": self.y_valid,
-            "models/RNN/x_training.txt": self.x_train,
-            "models/RNN/y_training.txt": self.y_train
+            (self.route_files + "/x_test.txt"): self.x_test,
+            (self.route_files + "/y_test.txt"): self.y_test,
+            (self.route_files + "/x_validation.txt"): self.x_valid,
+            (self.route_files + "/y_validation.txt"): self.y_valid,
+            (self.route_files + "/x_training.txt"): self.x_train,
+            (self.route_files + "/y_training.txt"): self.y_train
         }
         for route, data in sets.items():
             self.save_dataset_file(route, data)
@@ -233,7 +233,7 @@ class TweetsProcessor:
         # params = [(0.001, 0, 5, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 1, 'RMSPROP')]
 
     def save_best_models_file(self, models):
-        file = open("models/RNN/bestModels" + str(datetime.now())[:19].replace(" ", "T") + ".txt", "a+")
+        file = open(self.route_files + "/bestModels" + str(datetime.now())[:19].replace(" ", "T") + ".txt", "a+")
 
         for m in models:
             file.write("--------------------------------------------------------------------------------------------")
