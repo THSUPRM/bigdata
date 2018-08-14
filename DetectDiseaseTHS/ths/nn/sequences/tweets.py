@@ -257,7 +257,7 @@ class TweetSentiment2LSTMHyper(TweetSentiment2LSTM):
         # Dropout 2
         X = self.create_dropout(X, dropout_2, 'dropout_2')
         # Dense Layer 1
-        X = self.create_dense(X, dense_layer_1, regula_dense_1, True, 'elu', 'dense_1')
+        X = self.create_dense(X, dense_layer_1, regula_dense_1, True, 'tanh', 'dense_1')
         # Dense Layer 2
         X = self.create_dense(X, dense_layer_2, 0, False, None, 'dense_2')
 
@@ -383,12 +383,19 @@ class TweetSentiment2LSTMMaxDenseSequential(TweetSentiment2LSTM):
         input_layer = self.pretrained_embedding_layer_seq()
         model = Sequential()
         model.add(input_layer)
-        # model.add(
-        #     LSTM(first_layer_units, return_sequences=True, name='LSTM_1', kernel_regularizer=l2, recurrent_dropout=0.4))
-        model.add(GRU(layer_units_1, return_sequences=True))
+
+        model.add(LSTM(layer_units_1, return_sequences=True, name='LSTM_1'))
+        # model.add(GRU(layer_units_1, return_sequences=True))
         model.add(Dropout(dropout_1, name="dropout"))
         # model.add(Dense(dense_layer_1, activation='tanh'))
         # model.add(LSTM(second_layer_units, return_sequences=False, name="LSTM_2", kernel_regularizer=l2))
+
+        # model.add(Permute((2, 1), name="Attention_Permute"))
+        # model.add(TimeDistributed(Dense(self.max_sentence_len, activation='softmax', name="Attention_Dense")))
+        # model.add(Permute((2, 1), name="attention_probs"))
+        # model.add(Multiply(name='attention_multiplu', [X, attention_probs]))
+
+        # model.add(LSTM(layer_units_2, return_sequences=False, name="LSTM_2"))
         model.add(GRU(layer_units_2, return_sequences=False))
         model.add(Dropout(dropout_2, name="DROPOUT_2"))
         model.add(Dense(dense_layer_1, activation='tanh'))

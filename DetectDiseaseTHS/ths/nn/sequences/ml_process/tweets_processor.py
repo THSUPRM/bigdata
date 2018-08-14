@@ -135,9 +135,14 @@ class TweetsProcessor:
         # print("y_train TWOS: ", twos_count)
 
     def save_dataset_file(self, route, data):
-        file = open(route, "w")
-        file.write("\n".join([str(a) for a in data]))
-        file.close()
+        with open(route, 'w') as file:
+            i = 0
+            for item in data:
+                if i == len(data)-1:
+                    file.write('%s' % str(item).replace("\n", "").replace("[", "").replace("]", ""))
+                else:
+                    file.write('%s,' % str(item).replace("\n", "").replace("[", "").replace("]", ""))
+                i += 1
 
     def define_and_save_dictionary_datasets(self):
         sets = {
@@ -152,14 +157,23 @@ class TweetsProcessor:
             self.save_dataset_file(route, data)
 
     def get_best_models_params(self):
-        return [  # (0.003,0,5,32,50,0,0,0.1,50,0,0,0.1,64,0,3,'RMSPROP')
-            (0.003, 0, 20, 32, 50, 0, 0, 0.1, 50, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
-            , (0.001, 0, 60, 32, 50, 0, 0, 0.5, 50, 0, 0, 0.5, 64, 0, 3, 'RMSPROP')
-            , (0.001, 0, 5, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
-            , (0.001, 0, 10, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
-            , (0.001, 0, 20, 32, 50, 0, 0, 0.5, 50, 0, 0, 0.5, 32, 0, 3, 'RMSPROP')
-            , (0.001, 0, 60, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
+        return [ (0.003,0,5,32,50,0,0,0.1,50,0,0,0.1,64,0,3,'RMSPROP')
+            # (0.003, 0, 20, 32, 50, 0, 0, 0.1, 50, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
+            # , (0.001, 0, 60, 32, 50, 0, 0, 0.5, 50, 0, 0, 0.5, 64, 0, 3, 'RMSPROP')
+            # , (0.001, 0, 5, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
+            # , (0.001, 0, 10, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
+            # , (0.001, 0, 20, 32, 50, 0, 0, 0.5, 50, 0, 0, 0.5, 32, 0, 3, 'RMSPROP')
+            # , (0.001, 0, 60, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
         ]
+
+        # return [  # (0.003,0,5,32,50,0,0,0.1,50,0,0,0.1,64,0,3,'RMSPROP')
+        #     (0.003, 0, 20, 32, 100, 0, 0, 0.1, 100, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
+        #     , (0.001, 0, 60, 32, 100, 0, 0, 0.5, 100, 0, 0, 0.5, 64, 0, 3, 'RMSPROP')
+        #     , (0.001, 0, 5, 32, 100, 0, 0, 0.3, 100, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
+        #     , (0.001, 0, 10, 32, 100, 0, 0, 0.3, 100, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
+        #     , (0.001, 0, 20, 32, 100, 0, 0, 0.5, 100, 0, 0, 0.5, 32, 0, 3, 'RMSPROP')
+        #     , (0.001, 0, 60, 32, 100, 0, 0, 0.3, 100, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
+        # ]
         # longi = sum(1 for x in params)
         # print("LONGITUD PARAMS: " + str(longi))
         # for combination in params:

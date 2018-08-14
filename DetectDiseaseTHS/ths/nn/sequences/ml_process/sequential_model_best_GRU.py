@@ -60,6 +60,10 @@ class SequentialModelBestGRU(TweetsProcessor):
                         **params_fit)
 
             predicted = self.nn.predict(self.x_valid)
+
+            print("predicted[0]: ", predicted[0])
+            print("TYPE(predicted[0]): ", type(predicted[0]))
+
             predicted = np.argmax(predicted, axis=1)
 
             # Getting metrics
@@ -76,6 +80,12 @@ class SequentialModelBestGRU(TweetsProcessor):
                      f1_1,  # F1 Score
                      spec_1,  # Specificity
                      file_name, desc]
+
+            # SAVE MODEL
+            json_route = self.route_files + "/model" + str(combination).replace(" ", "") + ".json"
+            h5_route = self.route_files + "/model" + str(combination).replace(" ", "") + ".h5"
+            self.nn.save_model(json_route, h5_route)
+            print("Saved model to disk")
 
             models.append(model)
             models = sorted(models, key=itemgetter(3, 2, 1))

@@ -378,7 +378,7 @@ class ProcessTweetsGloveOnePassHyperParamAllData:
             ['dropout1', 0, 0.01, 0.09, 0.1, 0.4, 0.5],
             # LSTM2
             ['layerUnits2', 50, 40, 30, 20, 10, 5, 1],
-            ['kernelReg1', 0],
+            ['kernelReg2', 0],
             # ['kernelReg2'   ,0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
             ['recuDropout2', 0, 0.0001, 0.0009, 0.001, 0.006, 0.01, 0.05, 0.08, 0.1, 0.4, 0.5],
             # Dropout2
@@ -586,7 +586,7 @@ class ProcessTweetsGloveOnePassHyperParamPartionedData:
             ['dropout1', 0, 0.1, 0.3, 0.5],
             # LSTM2
             ['layerUnits2', 50],
-            ['kernelReg1', 0],
+            ['kernelReg2', 0],
             ['recuDropout2', 0],
             # Dropout2
             ['dropout2', 0, 0.1, 0.3, 0.5],
