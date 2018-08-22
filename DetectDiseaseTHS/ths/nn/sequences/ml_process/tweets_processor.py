@@ -44,8 +44,7 @@ class TweetsProcessor:
             i = 0
             csv_file = csv.reader(f, delimiter=',')
             for r in csv_file:
-                if i != 0:
-                    self.all_data.append(r)
+                self.all_data.append(r)
                 i = i + 1
         # print("len(All): ", len(all_data))
         # np.random.shuffle(all_data)
@@ -65,11 +64,14 @@ class TweetsProcessor:
                 ones_count += 1
             elif label == 2:
                 twos_count += 1
-        # print("LEN X_all:" , len(X_all))
-        # print("LEN y_all:", len(y_all))
+        # print("LEN x_all:" , len(self.x_all))
+        # print("LEN y_all:", len(self.y_all))
         # print("y_all ZEROS: ", zeros_count)
         # print("y_all ONES: ", ones_count)
         # print("y_all TWOS: ", twos_count)
+        # print("x_all[0]", self.x_all[0])
+        # print("y_all[0]", self.y_all[0])
+
 
     def get_glove_embedding(self):
         g = GloveEmbedding(self.embedding_filename, dimensions=50)
@@ -103,16 +105,16 @@ class TweetsProcessor:
         # TEST SET -> data set for test the model
         self.x_test = self.x_mapped[0:test_count]
         self.y_test = self.y_train_old[0:test_count]
-
-        # print("Len:" + str(len(x_test)) + " ARRAY:" + str(x_test))
-
-        # CROSS VALIDATION SET -> data set for validate the model
+        #
+        # # print("Len:" + str(len(x_test)) + " ARRAY:" + str(x_test))
+        #
+        # # CROSS VALIDATION SET -> data set for validate the model
         self.x_valid = self.x_mapped[(test_count + 1):(test_count * 2)]
         self.y_valid = self.y_train_old[(test_count + 1):(test_count * 2)]
-
-        # print("Len:" + str(len(x_valid)) + " ARRAY:" + str(x_valid))
-
-        # TRAINING SET -> data set for training and cross validation
+        #
+        # # print("Len:" + str(len(x_valid)) + " ARRAY:" + str(x_valid))
+        #
+        # # TRAINING SET -> data set for training and cross validation
         self.x_train = self.x_mapped[(test_count * 2) + 1:]
         self.y_train = self.y_mapped[(test_count * 2) + 1:]
 
@@ -133,6 +135,13 @@ class TweetsProcessor:
         # print("y_train ZEROS: ", zeros_count)
         # print("y_train ONES: ", ones_count)
         # print("y_train TWOS: ", twos_count)
+
+        # CROSS VALIDATION SET -> data set for validate the model
+        # self.x_valid = self.x_mapped[0:test_count]
+        # self.y_valid = self.y_train_old[0:test_count]
+        # self.x_train = self.x_mapped[(test_count + 1):]
+        # self.y_train = self.y_mapped[(test_count + 1):]
+
 
     def save_dataset_file(self, route, data):
         with open(route, 'w') as file:
@@ -157,13 +166,13 @@ class TweetsProcessor:
             self.save_dataset_file(route, data)
 
     def get_best_models_params(self):
-        return [ (0.003,0,5,32,50,0,0,0.1,50,0,0,0.1,64,0,3,'RMSPROP')
-            # (0.003, 0, 20, 32, 50, 0, 0, 0.1, 50, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
-            # , (0.001, 0, 60, 32, 50, 0, 0, 0.5, 50, 0, 0, 0.5, 64, 0, 3, 'RMSPROP')
-            # , (0.001, 0, 5, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
-            # , (0.001, 0, 10, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
-            # , (0.001, 0, 20, 32, 50, 0, 0, 0.5, 50, 0, 0, 0.5, 32, 0, 3, 'RMSPROP')
-            # , (0.001, 0, 60, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
+        return [ #(0.001, 0, 5, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
+            (0.003, 0, 20, 32, 50, 0, 0, 0.1, 50, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
+            , (0.001, 0, 60, 32, 50, 0, 0, 0.5, 50, 0, 0, 0.5, 64, 0, 3, 'RMSPROP')
+            , (0.001, 0, 5, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
+            , (0.001, 0, 10, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
+            , (0.001, 0, 20, 32, 50, 0, 0, 0.5, 50, 0, 0, 0.5, 32, 0, 3, 'RMSPROP')
+            , (0.001, 0, 60, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
         ]
 
         # return [  # (0.003,0,5,32,50,0,0,0.1,50,0,0,0.1,64,0,3,'RMSPROP')

@@ -24,6 +24,11 @@ def getmatrixhyperparam(i=1):
         ['epochs', 5, 10, 20, 40, 60],
         ['optimizer', 'rmsprop', 'adam', 'sgd', 'adagrad']
         ]
+    a = [
+        ['learningRate', 0.001],
+        ['epochs', 5],
+        ['optimizer', 'rmsprop', 'adam', 'sgd', 'adagrad']
+        ]
 
     b = list()
 
@@ -41,7 +46,7 @@ def main():
     np.random.seed(11)
     X_all = []
     Y_all = []
-    with open("data/cleantextlabels6.csv", "r", encoding="ISO-8859-1") as f:
+    with open("data/cleantextlabels6.csv", "r") as f:
         i = 0
         csv_file = csv.reader(f, delimiter=',')
         for r in csv_file:

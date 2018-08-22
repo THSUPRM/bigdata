@@ -14,13 +14,14 @@ from ths.nn.sequences.ml_process.tweets_processor import TweetsProcessor
 
 class BestModelsMulticlass(TweetsProcessor):
     def process_neural_network(self, max_len, g):
-        self.nn = TweetSentiment2LSTMHyper(max_len, g)
+        self.nn = None
         models = list()
 
         class_weight_val = class_weight.compute_class_weight('balanced', np.unique(self.y_all), self.y_all)
         class_weight_dictionary = {0: class_weight_val[0], 1: class_weight_val[1], 2: class_weight_val[2]}
 
         for combination in self.params:
+            self.nn = TweetSentiment2LSTMHyper(max_len, g)
             file_name = self.route_files + "/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
             start_time_comb = datetime.now()
@@ -32,7 +33,6 @@ class BestModelsMulticlass(TweetsProcessor):
             desc = self.nn.build(layer_units_1=l[4], kernel_reg_1=l[5], recu_dropout_1=l[6], dropout_1=l[7],
                                  layer_units_2=l[8], kernel_reg_2=l[9], recu_dropout_2=l[10], dropout_2=l[11],
                                  dense_layer_1=l[12], regula_dense_1=l[13], dense_layer_2=l[14], attention=True)
-
             self.nn.summary()
 
             # Assign the parameters agree the optimizer to use
@@ -74,6 +74,12 @@ class BestModelsMulticlass(TweetsProcessor):
                      f1_1,  # F1 Score
                      spec_1,  # Specificity
                      file_name, desc]
+
+            # SAVE MODEL
+            json_route = self.route_files + "/model" + str(combination).replace(" ", "") + ".json"
+            h5_route = self.route_files + "/model" + str(combination).replace(" ", "") + ".h5"
+            self.nn.save_model(json_route, h5_route)
+            print("Saved model to disk")
 
             models.append(model)
             models = sorted(models, key=itemgetter(3, 2, 1))

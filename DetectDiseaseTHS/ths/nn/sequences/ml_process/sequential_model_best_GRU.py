@@ -14,13 +14,14 @@ from ths.nn.sequences.ml_process.tweets_processor import TweetsProcessor
 
 class SequentialModelBestGRU(TweetsProcessor):
     def process_neural_network(self, max_len, g):
-        self.nn = TweetSentiment2LSTMMaxDenseSequential(max_len, g)
+        # self.nn = TweetSentiment2LSTMMaxDenseSequential(max_len, g)
         models = list()
 
         class_weight_val = class_weight.compute_class_weight('balanced', np.unique(self.y_all), self.y_all)
         class_weight_dictionary = {0: class_weight_val[0], 1: class_weight_val[1], 2: class_weight_val[2]}
 
         for combination in self.params:
+            self.nn = TweetSentiment2LSTMMaxDenseSequential(max_len, g)
             file_name = self.route_files + "/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
             start_time_comb = datetime.now()
@@ -60,10 +61,6 @@ class SequentialModelBestGRU(TweetsProcessor):
                         **params_fit)
 
             predicted = self.nn.predict(self.x_valid)
-
-            print("predicted[0]: ", predicted[0])
-            print("TYPE(predicted[0]): ", type(predicted[0]))
-
             predicted = np.argmax(predicted, axis=1)
 
             # Getting metrics

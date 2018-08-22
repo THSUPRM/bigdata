@@ -14,10 +14,10 @@ def main(optimizer):
     # P.process("trained/model14.json", "trained/model14.h5")
 
     ################ Optimized ################
-    # P = BestModelsMulticlass("data/cleantextlabels6.csv", "data/glove.6B.50d.txt", optimizer, "models/RNN")
+    # P = BestModelsMulticlass("data/cleantextlabels7.csv", "data/glove.6B.50d.txt", optimizer, "models/RNN")
     # P.process()
 
-    P = SequentialModelBestGRU("data/cleantextlabels6.csv", "data/glove.6B.50d.txt", optimizer, "models/GRU")
+    P = SequentialModelBestGRU("data/cleantextlabels7.csv", "data/glove.6B.50d.txt", optimizer, "models/GRU")
     P.process()
 
 
