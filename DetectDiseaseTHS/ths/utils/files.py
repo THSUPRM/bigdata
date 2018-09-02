@@ -84,7 +84,3 @@ class GloveEmbedding:
             word_to_vect.append(unk)
             np_word_to_vect = np.array(word_to_vect)
             return word_to_idx, idx_to_word, np_word_to_vect
-
-
-
-

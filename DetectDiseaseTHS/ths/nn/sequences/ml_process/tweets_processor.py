@@ -26,8 +26,7 @@ class TweetsProcessor:
         pass
 
     def process(self):
-        self.num_params = 16
-        self.params = self.get_best_models_params()
+
         self.load_data()
         x_train_pad, max_len, g = self.get_glove_embedding()
         self.get_partitioned_sets(x_train_pad)
@@ -71,7 +70,6 @@ class TweetsProcessor:
         # print("y_all TWOS: ", twos_count)
         # print("x_all[0]", self.x_all[0])
         # print("y_all[0]", self.y_all[0])
-
 
     def get_glove_embedding(self):
         g = GloveEmbedding(self.embedding_filename, dimensions=50)
@@ -165,7 +163,7 @@ class TweetsProcessor:
         for route, data in sets.items():
             self.save_dataset_file(route, data)
 
-    def get_best_models_params(self):
+    def get_best_models_params_RNN(self):
         return [ #(0.001, 0, 5, 32, 50, 0, 0, 0.3, 50, 0, 0, 0.1, 32, 0, 3, 'RMSPROP')
             (0.003, 0, 20, 32, 50, 0, 0, 0.1, 50, 0, 0, 0.1, 64, 0, 3, 'RMSPROP')
             , (0.001, 0, 60, 32, 50, 0, 0, 0.5, 50, 0, 0, 0.5, 64, 0, 3, 'RMSPROP')
@@ -225,7 +223,26 @@ class TweetsProcessor:
                                                     f1_2, spec_0, spec_1, spec_2)
         return prec_1, recall_1, f1_1, spec_1, t
 
-    def get_hyper_params_matrix(self, i=1):
+    def get_hyper_matrix_cnn(self, i=1):
+        a = [
+            ['learningRate', 0.001, 0.003, 0.01, 0.03, 0.1, 0.3],
+            ['epochs', 10, 20, 40, 60],
+            ['batchSize', 32],
+            ['filters', 11, 3, 7, 11],
+            # Dropout
+            ['dropout', 0, 0.1, 0.3, 0.5],
+            # DenseLayer
+            ['denseLayer', 128, 256, 512],
+            # Optimizer
+            ['optimizer', 'ADAM', 'RMSPROP']
+        ]
+        b = list()
+        for n in range(0, i):
+            b.append(a[n][1:len(a[n])])
+        b = itertools.product(*b)
+        return b
+
+    def get_hyper_params_matrix_rnn(self, i=1):
         a = [
             ['learningRate', 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1],
             ['momentum', 0],
@@ -266,7 +283,8 @@ class TweetsProcessor:
             file.write("\nf1_1: " + str(m[3]))
             file.write("\nspec_1: " + str(m[4]))
             file.write("\nfileName: " + str(m[5]))
-            file.write("\nmodel: " + str(m[6]))
+            if str(m[6]) != 'NO':
+                file.write("\nmodel: " + str(m[6]))
             file.write("\n--------------------------------------------------------------------------------------------")
 
         file.write("\nStart TOTAL execution time: " + str(self.start_time_comp))

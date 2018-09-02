@@ -1,63 +1,67 @@
+import itertools
+import time
 from datetime import datetime
 from operator import itemgetter
 
 from keras import backend as KerasBack
 from keras.callbacks import History
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, Adam
 from sklearn.metrics import confusion_matrix
 from sklearn.utils import class_weight
 
 from ths.nn.metrics.multiple import *
-from ths.nn.sequences.tweets import *
+from ths.nn.sequences.tweets_cnn import *
 from ths.nn.sequences.ml_process.tweets_processor import TweetsProcessor
 
 
-class BestModelsMulticlass(TweetsProcessor):
+class EvaluateModelsMulticlassCNN(TweetsProcessor):
     def process_neural_network(self, max_len, g):
-        self.num_params = 16
+        self.num_params = 7
         self.nn = None
         models = list()
-        self.params = self.get_best_models_params_RNN()
 
+        l = list()
+        params = self.get_hyper_matrix_cnn(self.num_params)
         class_weight_val = class_weight.compute_class_weight('balanced', np.unique(self.y_all), self.y_all)
         class_weight_dictionary = {0: class_weight_val[0], 1: class_weight_val[1], 2: class_weight_val[2]}
 
-        for combination in self.params:
-            self.nn = TweetSentiment2LSTMHyper(max_len, g)
-            file_name = self.route_files + "/model" + str(combination).replace(" ", "") + ".txt"
+        # for combination in itertools.islice(params, 0, 10):    # -> Basic test
+        # for combination in itertools.islice(params, 224):       # -> 1st host
+        # for combination in itertools.islice(params, 225, 448):  # -> 2nd host
+        # for combination in itertools.islice(params, 449, 672):  # -> 3th host
+        # for combination in itertools.islice(params, 673, 896):  # -> 4th host
+        # for combination in itertools.islice(params, 897, 1120):  # -> 5th host
+        for combination in params:
+            self.nn = TweetSentimentInceptionOneChan(max_len, g)
+            file_name = str(self.route_files) + "/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
             start_time_comb = datetime.now()
             log.write("Start time: " + str(start_time_comb) + "\n")
             log.write("\nCOMBINATION: " + str(combination) + "\n")
 
-            l = list(combination)
+            l = [0] * self.num_params
+            for e in range(0, self.num_params):
+                l[e] = combination[e]
 
-            desc = self.nn.build(layer_units_1=l[4], kernel_reg_1=l[5], recu_dropout_1=l[6], dropout_1=l[7],
-                                 layer_units_2=l[8], kernel_reg_2=l[9], recu_dropout_2=l[10], dropout_2=l[11],
-                                 dense_layer_1=l[12], regula_dense_1=l[13], dense_layer_2=l[14], attention=True)
+            self.nn.build(filters=l[3], dropout=l[4], dense_units=l[5], padding='valid')
             self.nn.summary()
 
             # Assign the parameters agree the optimizer to use
             params_compile = {}
-            if l[15] == 'RMSPROP':
+            if l[6] == 'RMSPROP':
                 rmsprop = RMSprop(lr=l[0], rho=0.9, epsilon=1e-06)
                 params_compile['optimizer'] = rmsprop
-                desc = desc + "\nRMSPROP with learning rate: " + str(l[0]) + " rho: 0.9 and epsilon=1e-06"
+            elif l[6] == 'ADAM':
+                adam = Adam(lr=l[0], beta_1=0.9, beta_2=0.999)
+                params_compile['optimizer'] = adam
 
             self.nn.compile(loss="categorical_crossentropy", metrics=['accuracy', precision, recall, f1, fprate],
                             **params_compile)
 
             history = History()
-            desc = desc + "\nEpochs: " + str(l[2]) + " Batch Size: " + str(l[3])
 
-            # Assign batch size to fit function
-            params_fit = {}
-            if l[3] != 0:
-                params_fit['batch_size'] = l[3]
-
-            self.nn.fit(self.x_train, self.y_train, epochs=l[2], callbacks=[history],
-                        class_weight=class_weight_dictionary,
-                        **params_fit)
+            self.nn.fit(self.x_train, self.y_train, epochs=l[1], batch_size=l[2], callbacks=[history],
+                        class_weight=class_weight_dictionary)
 
             predicted = self.nn.predict(self.x_valid)
             predicted = np.argmax(predicted, axis=1)
@@ -75,16 +79,21 @@ class BestModelsMulticlass(TweetsProcessor):
                      recall_1,  # Recall
                      f1_1,  # F1 Score
                      spec_1,  # Specificity
-                     file_name, desc]
+                     file_name, 'NO']
+
+            if len(models) < 8:
+                models.append(model)
+            else:
+                models.append(model)
+                models = sorted(models, key=itemgetter(3, 2, 1))
+                # print("Will erase: " + str(models[3]))
+                models.pop(3)
 
             # SAVE MODEL
             json_route = self.route_files + "/model" + str(combination).replace(" ", "") + ".json"
             h5_route = self.route_files + "/model" + str(combination).replace(" ", "") + ".h5"
             self.nn.save_model(json_route, h5_route)
             print("Saved model to disk")
-
-            models.append(model)
-            models = sorted(models, key=itemgetter(3, 2, 1))
 
             KerasBack.clear_session()
             log.write(track)
