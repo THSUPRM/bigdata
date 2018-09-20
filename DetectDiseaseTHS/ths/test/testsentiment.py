@@ -1,6 +1,6 @@
-from ths.nn.sequences.ml_process.best_models_multiclass import BestModelsMulticlass
+from ths.nn.sequences.ml_process.best_models_multiclass_rnn import BestModelsMulticlass
 from ths.nn.sequences.ml_process.sequential_model_best_GRU import SequentialModelBestGRU
-from ths.nn.sequences.ml_process.best_models_multiclass import BestModelsMulticlass
+from ths.nn.sequences.ml_process.best_models_multiclass_rnn import BestModelsMulticlass
 from ths.nn.sequences.process import *
 import sys
 

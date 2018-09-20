@@ -24,20 +24,23 @@ class EvaluateModelsMulticlassCNN(TweetsProcessor):
         params = self.get_hyper_matrix_cnn(self.num_params)
         class_weight_val = class_weight.compute_class_weight('balanced', np.unique(self.y_all), self.y_all)
         class_weight_dictionary = {0: class_weight_val[0], 1: class_weight_val[1], 2: class_weight_val[2]}
+        count_models = 0
+
+        # params = [(0.03, 20, 32, 11, 0.3, 128, 'ADAM')]
 
         # for combination in itertools.islice(params, 0, 10):    # -> Basic test
-        # for combination in itertools.islice(params, 224):       # -> 1st host
-        # for combination in itertools.islice(params, 225, 448):  # -> 2nd host
-        # for combination in itertools.islice(params, 449, 672):  # -> 3th host
-        # for combination in itertools.islice(params, 673, 896):  # -> 4th host
-        # for combination in itertools.islice(params, 897, 1120):  # -> 5th host
-        for combination in params:
+        for combination in itertools.islice(params, 0, 500):     # -> 1st host
+        # for combination in itertools.islice(params, 500, 1000):  # -> 2nd host
+        # for combination in itertools.islice(params, 1000, 1500):  # -> 3th host
+        # for combination in itertools.islice(params, 1500, 1728):  # -> 4th host
+        # for combination in params:
+            count_models += 1
             self.nn = TweetSentimentInceptionOneChan(max_len, g)
             file_name = str(self.route_files) + "/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
             start_time_comb = datetime.now()
             log.write("Start time: " + str(start_time_comb) + "\n")
-            log.write("\nCOMBINATION: " + str(combination) + "\n")
+            log.write("COMBINATION: " + str(combination) + "\n")
 
             l = [0] * self.num_params
             for e in range(0, self.num_params):
@@ -81,15 +84,16 @@ class EvaluateModelsMulticlassCNN(TweetsProcessor):
                      spec_1,  # Specificity
                      file_name, 'NO']
 
-            if len(models) < 8:
-                models.append(model)
-            else:
-                models.append(model)
-                models = sorted(models, key=itemgetter(3, 2, 1))
-                # print("Will erase: " + str(models[3]))
-                models.pop(3)
+            if prec_1 != 'nan' and recall_1 != 0.0:
+                if len(models) < 8:
+                    models.append(model)
+                else:
+                    models.append(model)
+                    models = sorted(models, key=itemgetter(3, 2, 1))
+                    # print("Will erase: " + str(models[3]))
+                    models.pop(3)
 
-            # SAVE MODEL
+                # SAVE MODEL
             json_route = self.route_files + "/model" + str(combination).replace(" ", "") + ".json"
             h5_route = self.route_files + "/model" + str(combination).replace(" ", "") + ".h5"
             self.nn.save_model(json_route, h5_route)
@@ -101,4 +105,5 @@ class EvaluateModelsMulticlassCNN(TweetsProcessor):
                 ("\nExecution time: {} minutes".format(((datetime.now() - start_time_comb).total_seconds()) / 60)))
             log.write(("\nFinish time: " + str(datetime.now())))
             log.close()
+            print("******************************************************************MODEL EVALUATED #: ", count_models)
         return models

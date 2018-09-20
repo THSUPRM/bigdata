@@ -187,6 +187,15 @@ class TweetsProcessor:
         #     print(type(combination))
         #     print(str(combination).replace(" ", ""))
 
+    def get_best_models_params_CNN(self):
+        return [
+            (0.003, 40, 32, 11, 0, 256, 'ADAM'),
+            (0.001, 60, 32, 11, 0.5, 512, 'ADAM'),
+            (0.001, 60, 32, 11, 0, 256, 'ADAM'),
+            (0.001, 40, 32, 7, 0.3, 256, 'ADAM'),
+            (0.001, 10, 32, 11, 0, 128, 'ADAM')
+        ]
+
     def calculate_cm_metrics(self, c_matrix, track):
         prec_0 = c_matrix[0][0] / (c_matrix[0][0] + c_matrix[1][0] + c_matrix[2][0])
         prec_1 = c_matrix[1][1] / (c_matrix[1][1] + c_matrix[0][1] + c_matrix[2][1])
@@ -221,6 +230,18 @@ class TweetsProcessor:
                     "Specificity 1: {}\n"
                     "Specificity 2: {}\n").format(prec_0, prec_1, prec_2, recall_0, recall_1, recall_2, f1_0, f1_1,
                                                     f1_2, spec_0, spec_1, spec_2)
+        # print("Precision 0: " + str(prec_0) +"\n" +
+        #  "Precision 1: " + str(prec_1) +"\n" +
+        #  "Precision 2: " + str(prec_2) +"\n"+
+        #  "Recall 0: " + str(recall_0) +"\n" +
+        #  "Recall 1: " + str(recall_1) +"\n" +
+        #  "Recall 2: " + str(recall_2) +"\n" +
+        #  "F1 Score 0: " + str(f1_0) +"\n" +
+        #  "F1 Score 1: " + str(f1_1) +"\n" +
+        #  "F1 Score 2: " + str(f1_2) +"\n" +
+        #  "Specificity 0: " + str(spec_0) +"\n" +
+        #  "Specificity 1: " + str(spec_1) +"\n" +
+        #  "Specificity 2: " + str(spec_2) +"\n" )
         return prec_1, recall_1, f1_1, spec_1, t
 
     def get_hyper_matrix_cnn(self, i=1):
@@ -228,7 +249,7 @@ class TweetsProcessor:
             ['learningRate', 0.001, 0.003, 0.01, 0.03, 0.1, 0.3],
             ['epochs', 10, 20, 40, 60],
             ['batchSize', 32],
-            ['filters', 11, 3, 7, 11],
+            ['filters', 3, 7, 11],
             # Dropout
             ['dropout', 0, 0.1, 0.3, 0.5],
             # DenseLayer

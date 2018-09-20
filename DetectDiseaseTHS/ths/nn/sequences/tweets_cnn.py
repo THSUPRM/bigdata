@@ -140,37 +140,37 @@ class TweetSentimentInceptionOneChan(TweetSentiment2DCNN2Channel):
         # Reshape
         embeddings1= Reshape((self.max_sentence_len, self.embedding_builder.get_dimensions(), 1))(embeddings1)
         #compute 1x1 convolution on input
-        onebyone = Conv2D(filters=filters, kernel_size=(1,1), strides=(1, 1), padding=padding, activation=activation,
+        onebyone = Conv2D(filters=16, kernel_size=(1,1), strides=(1, 1), padding=padding, activation=activation,
                    name="CONV_1X1_1")(embeddings1)
         #compute 3xdimension convolution on one by one
         kernel_width = self.embedding_builder.get_dimensions()
         kernel_height = 3
         kernel_size = (kernel_height, kernel_width)
-        threebydim1 = Conv2D(filters=filters, kernel_size=kernel_size, strides=(1, 1), padding=padding,
+        threebydim1 = Conv2D(filters=16, kernel_size=kernel_size, strides=(1, 1), padding=padding,
                              activation=activation, name="CONV_3xdim_1")(onebyone)
         #compute 3xdimension convolution on input
         kernel_width = self.embedding_builder.get_dimensions()
         kernel_height = 3
         kernel_size = (kernel_height, kernel_width)
-        threebydim2 = Conv2D(filters=filters, kernel_size=kernel_size, strides=(1, 1), padding=padding,
+        threebydim2 = Conv2D(filters=16, kernel_size=kernel_size, strides=(1, 1), padding=padding,
                              activation=activation, name="CONV_3xdim_2")(embeddings1)
         #compute 5xdimension convolution on one by one
         kernel_width = self.embedding_builder.get_dimensions()
         kernel_height = 5
         kernel_size = (kernel_height, kernel_width)
-        fivebydim1 = Conv2D(filters=filters, kernel_size=kernel_size, strides=(1, 1), padding=padding,
+        fivebydim1 = Conv2D(filters=8, kernel_size=kernel_size, strides=(1, 1), padding=padding,
                             activation=activation, name="CONV_5xdim_1")(onebyone)
         fivebydim1 = ZeroPadding2D((1, 0))(fivebydim1)
         #compute 5xdimension convolution on input
         kernel_width = self.embedding_builder.get_dimensions()
         kernel_height = 5
         kernel_size = (kernel_height, kernel_width)
-        fivebydim2 = Conv2D(filters=filters, kernel_size=kernel_size, strides=(1, 1), padding=padding,
+        fivebydim2 = Conv2D(filters=8, kernel_size=kernel_size, strides=(1, 1), padding=padding,
                             activation=activation, name="CONV_5xdim_2")(embeddings1)
         fivebydim2 = ZeroPadding2D((1,0))(fivebydim2)
         # Group all the layers
         concat_layer = Concatenate(axis=-1)([threebydim1, threebydim2, fivebydim1, fivebydim2])
-        final_onebyone = Conv2D(filters=filters*2, kernel_size=(1,1), strides=(1, 1), padding=padding,
+        final_onebyone = Conv2D(filters=8*2, kernel_size=(1,1), strides=(1, 1), padding=padding,
                                 activation=activation, name="CONV_1X1_final")(concat_layer)
         # Flatten
         X = Flatten()(final_onebyone)
