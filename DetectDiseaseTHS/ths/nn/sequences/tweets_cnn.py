@@ -353,15 +353,14 @@ class TweetSentimentInceptionV2_5x5_Multi(TweetSentiment2DCNN2Channel):
         #reverse_sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_2")
         # Embedding layer
         embeddings_layer = self.pretrained_embedding_layer()
-        embeddings1 = embeddings_layer(sentence_input)
+        embeddings = embeddings_layer(sentence_input)
         # Reshape
-        embeddings1 = Reshape((self.max_sentence_len, self.embedding_builder.get_dimensions(), 1))(embeddings1)
+        embeddings = Reshape((self.max_sentence_len, self.embedding_builder.get_dimensions(), 1))(embeddings)
 
-        layer1 = self.get_inception_model(embeddings1)
-        layer2 = self.get_inception_model(layer1)
-        # layer3 = self.get_inception_model(layer2)
-        # layer4 = self.get_inception_model(layer3)
-
+        layer1 = self.get_inception_model(embeddings, filters)
+        layer2 = self.get_inception_model(layer1, filters)
+        # layer3 = self.get_inception_model(layer2, filters)
+        # layer4 = self.get_inception_model(layer3, filters)
 
         # # Group all the layers
         concat_layer = Concatenate(axis=-1)([layer1, layer2])
@@ -370,7 +369,6 @@ class TweetSentimentInceptionV2_5x5_Multi(TweetSentiment2DCNN2Channel):
 
         # Flatten
         X = Flatten()(final)
-
         X = Dense(units=dense_units, activation='relu', name="DENSE_2")(X)
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_3")(X)
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_4")(X)
