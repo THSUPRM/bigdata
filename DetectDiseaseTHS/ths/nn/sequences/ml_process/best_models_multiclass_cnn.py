@@ -26,7 +26,8 @@ class EvaluateBestModelsMulticlassCNN(TweetsProcessor):
         class_weight_dictionary = {0: class_weight_val[0], 1: class_weight_val[1], 2: class_weight_val[2]}
 
         for combination in params:
-            self.nn = TweetSentimentInceptionV2(max_len, g)
+            # self.nn = TweetSentimentInceptionV2_3x3(max_len, g)
+            self.nn = TweetSentimentInceptionV2_5x5(max_len, g)
             file_name = str(self.route_files) + "/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
             start_time_comb = datetime.now()
