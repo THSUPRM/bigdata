@@ -199,10 +199,6 @@ class TweetSentimentInceptionV2_3x3(TweetSentiment2DCNN2Channel):
 
     def build(self, padding='same', filters=4, kernel_size=(1, 1), strides=(1, 1), activation='relu', dense_units=64,
               dropout=0):
-        print("MAX_LEN: ", self.max_sentence_len)
-        print("DIMENSIONS g:", self.embedding_builder.get_dimensions())
-        print("g:", self.embedding_builder)
-
         # Input Layer 1 - tweet in right order
         sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_1")
         #reverse_sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_2")
@@ -260,10 +256,6 @@ class TweetSentimentInceptionV2_5x5(TweetSentiment2DCNN2Channel):
 
     def build(self, padding='same', filters=4, kernel_size=(1, 1), strides=(1, 1), activation='relu', dense_units=64,
               dropout=0):
-        print("MAX_LEN: ", self.max_sentence_len)
-        print("DIMENSIONS g:", self.embedding_builder.get_dimensions())
-        print("g:", self.embedding_builder)
-
         # Input Layer 1 - tweet in right order
         sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_1")
         #reverse_sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_2")
@@ -300,6 +292,134 @@ class TweetSentimentInceptionV2_5x5(TweetSentiment2DCNN2Channel):
 
         # # Group all the layers
         concat_layer = Concatenate(axis=-1)([branch_1, branch_2, branch_3, branch_4])
+        final = Conv2D(filters*2, kernel_size=(1,1), strides=(1, 1), padding='same',
+                                activation='relu', name="CONV_final")(concat_layer)
+
+        # Flatten
+        X = Flatten()(final)
+
+        X = Dense(units=dense_units, activation='relu', name="DENSE_2")(X)
+        X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_3")(X)
+        X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_4")(X)
+
+        # Final layer
+        X = Dense(3, activation="softmax", name="FINAL_SOFTMAX")(X)
+        # create the model
+        self.model = Model(input=[sentence_input], output=X)
+
+class TweetSentimentInceptionV2_3x3(TweetSentiment2DCNN2Channel):
+    def __init__(self, max_sentence_len, embedding_builder):
+            super().__init__(max_sentence_len, embedding_builder)
+
+    def build(self, padding='same', filters=4, kernel_size=(1, 1), strides=(1, 1), activation='relu', dense_units=64,
+              dropout=0):
+        # Input Layer 1 - tweet in right order
+        sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_1")
+        #reverse_sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_2")
+        # Embedding layer
+        embeddings_layer = self.pretrained_embedding_layer()
+        embeddings1 = embeddings_layer(sentence_input)
+        # Reshape
+        embeddings1 = Reshape((self.max_sentence_len, self.embedding_builder.get_dimensions(), 1))(embeddings1)
+        # Branch No. 1
+        branch_1 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV1_1XN")(embeddings1)
+        branch_1 = Conv2D(filters, kernel_size=(1, 3), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV1_1X3")(branch_1)
+        branch_1 = Conv2D(filters, kernel_size=(3, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV1_3X1")(branch_1)
+        branch_1 = Conv2D(filters*2, kernel_size=(1, 3), strides=(2, 2), padding='same', activation='relu',
+                          name="CONV1_2_1X3")(branch_1)
+        branch_1 = Conv2D(filters*2, kernel_size=(3, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV1_2_3X1")(branch_1)
+        # Branch No. 2
+        branch_2 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV2_1X1")(embeddings1)
+        branch_2 = Conv2D(filters, kernel_size=(1, 3), strides=(2, 2), padding='same', activation='relu',
+                          name="CONV2_1X3")(branch_2)
+        branch_2 = Conv2D(filters, kernel_size=(3, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV2_3X1")(branch_2)
+        # Branch No. 3
+        branch_3 = MaxPooling2D((1, 1), strides=(2, 2), padding='same', name='MAXPOL_1X1')(embeddings1)
+        branch_3 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV3_1X1")(branch_3)
+        # Branch No. 4
+        branch_4 = Conv2D(filters, kernel_size=(1, 1), strides=(2, 2), padding='same', activation='relu',
+                          name="CONV4_1X1")(embeddings1)
+
+        # # Group all the layers
+        concat_layer = Concatenate(axis=-1)([branch_1, branch_2, branch_3, branch_4])
+        final = Conv2D(filters*2, kernel_size=(1,1), strides=(1, 1), padding='same',
+                                activation='relu', name="CONV_final")(concat_layer)
+
+        # Flatten
+        X = Flatten()(final)
+
+        X = Dense(units=dense_units, activation='relu', name="DENSE_2")(X)
+        X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_3")(X)
+        X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_4")(X)
+
+        # Final layer
+        X = Dense(3, activation="softmax", name="FINAL_SOFTMAX")(X)
+        # create the model
+        self.model = Model(input=[sentence_input], output=X)
+
+class TweetSentimentInceptionV2_5x5_Multi(TweetSentiment2DCNN2Channel):
+    def __init__(self, max_sentence_len, embedding_builder):
+            super().__init__(max_sentence_len, embedding_builder)
+
+    def get_inception_model(self, embeddings, filters):
+         # Branch No. 1
+         branch_1 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
+                           name="CONV1_1XN")(embeddings)
+         branch_1 = Conv2D(filters, kernel_size=(1, 5), strides=(1, 1), padding='same', activation='relu',
+                           name="CONV1_1X3")(branch_1)
+         branch_1 = Conv2D(filters, kernel_size=(5, 1), strides=(1, 1), padding='same', activation='relu',
+                           name="CONV1_3X1")(branch_1)
+         branch_1 = Conv2D(filters * 2, kernel_size=(1, 5), strides=(2, 2), padding='same', activation='relu',
+                           name="CONV1_2_1X3")(branch_1)
+         branch_1 = Conv2D(filters * 2, kernel_size=(5, 1), strides=(1, 1), padding='same', activation='relu',
+                           name="CONV1_2_3X1")(branch_1)
+         # Branch No. 2
+         branch_2 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
+                           name="CONV2_1X1")(embeddings)
+         branch_2 = Conv2D(filters, kernel_size=(1, 5), strides=(2, 2), padding='same', activation='relu',
+                           name="CONV2_1X3")(branch_2)
+         branch_2 = Conv2D(filters, kernel_size=(5, 1), strides=(1, 1), padding='same', activation='relu',
+                           name="CONV2_3X1")(branch_2)
+         # Branch No. 3
+         branch_3 = MaxPooling2D((1, 1), strides=(2, 2), padding='same', name='MAXPOL_1X1')(embeddings)
+         branch_3 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
+                           name="CONV3_1X1")(branch_3)
+         # Branch No. 4
+         branch_4 = Conv2D(filters, kernel_size=(1, 1), strides=(2, 2), padding='same', activation='relu',
+                           name="CONV4_1X1")(embeddings)
+
+         # # Group all the layers
+         concat_layer = Concatenate(axis=-1)([branch_1, branch_2, branch_3, branch_4])
+         final = Conv2D(filters * 2, kernel_size=(1, 1), strides=(1, 1), padding='same',
+                        activation='relu', name="CONV_final")(concat_layer)
+         return final
+
+    def build(self, padding='same', filters=4, kernel_size=(1, 1), strides=(1, 1), activation='relu', dense_units=64,
+              dropout=0):
+        # Input Layer 1 - tweet in right order
+        sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_1")
+        #reverse_sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_2")
+        # Embedding layer
+        embeddings_layer = self.pretrained_embedding_layer()
+        embeddings1 = embeddings_layer(sentence_input)
+        # Reshape
+        embeddings1 = Reshape((self.max_sentence_len, self.embedding_builder.get_dimensions(), 1))(embeddings1)
+
+        layer1 = self.get_inception_model(embeddings1)
+        layer2 = self.get_inception_model(layer1)
+        # layer3 = self.get_inception_model(layer2)
+        # layer4 = self.get_inception_model(layer3)
+
+
+        # # Group all the layers
+        concat_layer = Concatenate(axis=-1)([layer1, layer2])
         final = Conv2D(filters*2, kernel_size=(1,1), strides=(1, 1), padding='same',
                                 activation='relu', name="CONV_final")(concat_layer)
 
