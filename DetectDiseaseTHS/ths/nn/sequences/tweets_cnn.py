@@ -332,7 +332,7 @@ class TweetSentimentInceptionV2_5x5_Multi(TweetSentiment2DCNN2Channel):
          branch_2 = Conv2D(filters, kernel_size=(5, 1), strides=(1, 1), padding='same', activation='relu',
                            name="CONV2_3X1")(branch_2)
          # Branch No. 3
-         branch_3 = MaxPooling2D((1, 1), strides=(2, 2), padding='same', name='MAXPOL_1X1')(embeddings)
+         branch_3 = MaxPooling2D((1, 1), strides=(1, 1), padding='same', name='MAXPOL_1X1')(embeddings)
          branch_3 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
                            name="CONV3_1X1")(branch_3)
          # Branch No. 4
