@@ -190,6 +190,7 @@ class TweetsProcessor:
     def get_best_models_params_CNN(self):
         return [
             (0.001, 10, 32, 64, 0, 128, 'ADAM'),
+            (0.001, 40, 32, 64, 0, 256, 'ADAM'),
             (0.001, 20, 32, 64, 0.3, 256, 'ADAM'),
             (0.001, 20, 32, 64, 0.3, 256, 'ADADELTA'),
             (0.001, 20, 32, 64, 0.3, 256, 'RMSPROP')
