@@ -320,14 +320,14 @@ class TweetSentimentInceptionV2_5x5_Multi(TweetSentiment2DCNN2Channel):
                            name="CONV1_1X3")(branch_1)
          branch_1 = Conv2D(filters, kernel_size=(5, 1), strides=(1, 1), padding='same', activation='relu',
                            name="CONV1_3X1")(branch_1)
-         branch_1 = Conv2D(filters * 2, kernel_size=(1, 5), strides=(2, 2), padding='same', activation='relu',
+         branch_1 = Conv2D(filters * 2, kernel_size=(1, 5), strides=(1, 1), padding='same', activation='relu',
                            name="CONV1_2_1X3")(branch_1)
          branch_1 = Conv2D(filters * 2, kernel_size=(5, 1), strides=(1, 1), padding='same', activation='relu',
                            name="CONV1_2_3X1")(branch_1)
          # Branch No. 2
          branch_2 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
                            name="CONV2_1X1")(embeddings)
-         branch_2 = Conv2D(filters, kernel_size=(1, 5), strides=(2, 2), padding='same', activation='relu',
+         branch_2 = Conv2D(filters, kernel_size=(1, 5), strides=(1, 1), padding='same', activation='relu',
                            name="CONV2_1X3")(branch_2)
          branch_2 = Conv2D(filters, kernel_size=(5, 1), strides=(1, 1), padding='same', activation='relu',
                            name="CONV2_3X1")(branch_2)
@@ -336,7 +336,7 @@ class TweetSentimentInceptionV2_5x5_Multi(TweetSentiment2DCNN2Channel):
          branch_3 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
                            name="CONV3_1X1")(branch_3)
          # Branch No. 4
-         branch_4 = Conv2D(filters, kernel_size=(1, 1), strides=(2, 2), padding='same', activation='relu',
+         branch_4 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
                            name="CONV4_1X1")(embeddings)
 
          # # Group all the layers
