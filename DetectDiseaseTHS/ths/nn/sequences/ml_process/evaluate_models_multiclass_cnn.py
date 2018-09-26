@@ -5,7 +5,7 @@ from operator import itemgetter
 
 from keras import backend as KerasBack
 from keras.callbacks import History
-from keras.optimizers import RMSprop, Adam
+from keras.optimizers import RMSprop, Adam, Adadelta
 from sklearn.metrics import confusion_matrix
 from sklearn.utils import class_weight
 
@@ -35,7 +35,7 @@ class EvaluateModelsMulticlassCNN(TweetsProcessor):
         # for combination in itertools.islice(params, 1500, 1728):  # -> 4th host
         # for combination in params:
             count_models += 1
-            self.nn = TweetSentimentInceptionOneChan(max_len, g)
+            self.nn = TweetSentimentInceptionV2(max_len, g)
             file_name = str(self.route_files) + "/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
             start_time_comb = datetime.now()
@@ -57,6 +57,11 @@ class EvaluateModelsMulticlassCNN(TweetsProcessor):
             elif l[6] == 'ADAM':
                 adam = Adam(lr=l[0], beta_1=0.9, beta_2=0.999)
                 params_compile['optimizer'] = adam
+            elif l[6] == 'ADADELTA':
+                adaDelta = Adadelta(lr=l[0], rho=0.95, epsilon=1e-08, decay=0.0)
+                params_compile['optimizer'] = adaDelta
+            else:
+                print("OPTIMIZADOR: El optimizador a crear no esta en lista...")
 
             self.nn.compile(loss="categorical_crossentropy", metrics=['accuracy', precision, recall, f1, fprate],
                             **params_compile)

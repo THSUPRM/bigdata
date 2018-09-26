@@ -130,7 +130,6 @@ class TweetSentimentInceptionOneChan(TweetSentiment2DCNN2Channel):
 
     def build(self, padding='same', filters=4, kernel_size=(1, 1), strides=(1, 1), activation='relu', dense_units=64,
               dropout=0):
-
         # Input Layer 1 - tweet in right order
         sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_1")
         #reverse_sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_2")
@@ -140,37 +139,37 @@ class TweetSentimentInceptionOneChan(TweetSentiment2DCNN2Channel):
         # Reshape
         embeddings1= Reshape((self.max_sentence_len, self.embedding_builder.get_dimensions(), 1))(embeddings1)
         #compute 1x1 convolution on input
-        onebyone = Conv2D(filters=16, kernel_size=(1,1), strides=(1, 1), padding=padding, activation=activation,
+        onebyone = Conv2D(filters=filters, kernel_size=(1, 1), strides=(1, 1), padding=padding, activation=activation,
                    name="CONV_1X1_1")(embeddings1)
         #compute 3xdimension convolution on one by one
         kernel_width = self.embedding_builder.get_dimensions()
         kernel_height = 3
         kernel_size = (kernel_height, kernel_width)
-        threebydim1 = Conv2D(filters=16, kernel_size=kernel_size, strides=(1, 1), padding=padding,
+        threebydim1 = Conv2D(filters=filters, kernel_size=kernel_size, strides=(1, 1), padding=padding,
                              activation=activation, name="CONV_3xdim_1")(onebyone)
         #compute 3xdimension convolution on input
         kernel_width = self.embedding_builder.get_dimensions()
         kernel_height = 3
         kernel_size = (kernel_height, kernel_width)
-        threebydim2 = Conv2D(filters=16, kernel_size=kernel_size, strides=(1, 1), padding=padding,
+        threebydim2 = Conv2D(filters=filters, kernel_size=kernel_size, strides=(1, 1), padding=padding,
                              activation=activation, name="CONV_3xdim_2")(embeddings1)
         #compute 5xdimension convolution on one by one
         kernel_width = self.embedding_builder.get_dimensions()
         kernel_height = 5
         kernel_size = (kernel_height, kernel_width)
-        fivebydim1 = Conv2D(filters=8, kernel_size=kernel_size, strides=(1, 1), padding=padding,
+        fivebydim1 = Conv2D(filters=filters, kernel_size=kernel_size, strides=(1, 1), padding=padding,
                             activation=activation, name="CONV_5xdim_1")(onebyone)
         fivebydim1 = ZeroPadding2D((1, 0))(fivebydim1)
         #compute 5xdimension convolution on input
         kernel_width = self.embedding_builder.get_dimensions()
         kernel_height = 5
         kernel_size = (kernel_height, kernel_width)
-        fivebydim2 = Conv2D(filters=8, kernel_size=kernel_size, strides=(1, 1), padding=padding,
+        fivebydim2 = Conv2D(filters=filters, kernel_size=kernel_size, strides=(1, 1), padding=padding,
                             activation=activation, name="CONV_5xdim_2")(embeddings1)
         fivebydim2 = ZeroPadding2D((1,0))(fivebydim2)
         # Group all the layers
         concat_layer = Concatenate(axis=-1)([threebydim1, threebydim2, fivebydim1, fivebydim2])
-        final_onebyone = Conv2D(filters=8*2, kernel_size=(1,1), strides=(1, 1), padding=padding,
+        final_onebyone = Conv2D(filters=filters, kernel_size=(1,1), strides=(1, 1), padding=padding,
                                 activation=activation, name="CONV_1X1_final")(concat_layer)
         # Flatten
         X = Flatten()(final_onebyone)
@@ -189,6 +188,68 @@ class TweetSentimentInceptionOneChan(TweetSentiment2DCNN2Channel):
 
         # Final layer
         #X = Dense(1, activation="sigmoid", name="FINAL_SIGMOID")(X)
+        X = Dense(3, activation="softmax", name="FINAL_SOFTMAX")(X)
+        # create the model
+        self.model = Model(input=[sentence_input], output=X)
+
+
+class TweetSentimentInceptionV2(TweetSentiment2DCNN2Channel):
+    def __init__(self, max_sentence_len, embedding_builder):
+            super().__init__(max_sentence_len, embedding_builder)
+
+    def build(self, padding='same', filters=4, kernel_size=(1, 1), strides=(1, 1), activation='relu', dense_units=64,
+              dropout=0):
+        print("MAX_LEN: ", self.max_sentence_len)
+        print("DIMENSIONS g:", self.embedding_builder.get_dimensions())
+        print("g:", self.embedding_builder)
+
+        # Input Layer 1 - tweet in right order
+        sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_1")
+        #reverse_sentence_input = Input(shape=(self.max_sentence_len,), name="INPUT_2")
+        # Embedding layer
+        embeddings_layer = self.pretrained_embedding_layer()
+        embeddings1 = embeddings_layer(sentence_input)
+        # Reshape
+        embeddings1 = Reshape((self.max_sentence_len, self.embedding_builder.get_dimensions(), 1))(embeddings1)
+        # Branch No. 1
+        branch_1 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
+                   name="CONV1_1XN")(embeddings1)
+        branch_1 = Conv2D(filters, kernel_size=(1, 3), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV1_1X3")(branch_1)
+        branch_1 = Conv2D(filters, kernel_size=(3, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV1_3X1")(branch_1)
+        branch_1 = Conv2D(filters*2, kernel_size=(1, 3), strides=(2, 2), padding='same', activation='relu',
+                          name="CONV1_2_1X3")(branch_1)
+        branch_1 = Conv2D(filters*2, kernel_size=(3, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV1_2_3X1")(branch_1)
+        # Branch No. 2
+        branch_2 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV2_1X1")(embeddings1)
+        branch_2 = Conv2D(filters, kernel_size=(1, 3), strides=(2, 2), padding='same', activation='relu',
+                          name="CONV2_1X3")(branch_2)
+        branch_2 = Conv2D(filters, kernel_size=(3, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV2_3X1")(branch_2)
+        # Branch No. 3
+        branch_3 = MaxPooling2D((1, 1), strides=(2, 2), padding='same', name='MAXPOL_1X1')(embeddings1)
+        branch_3 = Conv2D(filters, kernel_size=(1, 1), strides=(1, 1), padding='same', activation='relu',
+                          name="CONV3_1X1")(branch_3)
+        # Branch No. 4
+        branch_4 = Conv2D(filters, kernel_size=(1, 1), strides=(2, 2), padding='same', activation='relu',
+                          name="CONV4_1X1")(embeddings1)
+
+        # # Group all the layers
+        concat_layer = Concatenate(axis=-1)([branch_1, branch_2, branch_3, branch_4])
+        final = Conv2D(filters*2, kernel_size=(1,1), strides=(1, 1), padding='same',
+                                activation='relu', name="CONV_final")(concat_layer)
+
+        # Flatten
+        X = Flatten()(final)
+
+        X = Dense(units=dense_units, activation='relu', name="DENSE_2")(X)
+        X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_3")(X)
+        X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_4")(X)
+
+        # Final layer
         X = Dense(3, activation="softmax", name="FINAL_SOFTMAX")(X)
         # create the model
         self.model = Model(input=[sentence_input], output=X)

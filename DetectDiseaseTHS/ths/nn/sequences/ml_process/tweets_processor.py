@@ -189,11 +189,10 @@ class TweetsProcessor:
 
     def get_best_models_params_CNN(self):
         return [
-            (0.003, 40, 32, 11, 0, 256, 'ADAM'),
-            (0.001, 60, 32, 11, 0.5, 512, 'ADAM'),
-            (0.001, 60, 32, 11, 0, 256, 'ADAM'),
-            (0.001, 40, 32, 7, 0.3, 256, 'ADAM'),
-            (0.001, 10, 32, 11, 0, 128, 'ADAM')
+            (0.001, 10, 32, 64, 0, 128, 'ADAM'),
+            (0.003, 20, 32, 64, 0.3, 256, 'ADAM'),
+            (0.003, 20, 32, 64, 0.3, 256, 'ADADELTA'),
+            (0.003, 20, 32, 64, 0.3, 256, 'RMSPROP')
         ]
 
     def calculate_cm_metrics(self, c_matrix, track):
@@ -246,16 +245,16 @@ class TweetsProcessor:
 
     def get_hyper_matrix_cnn(self, i=1):
         a = [
-            ['learningRate', 0.001, 0.003, 0.01, 0.03, 0.1, 0.3],
+            ['learningRate', 0.001, 0.003, 0.006, 0.008, 0.01],
             ['epochs', 10, 20, 40, 60],
             ['batchSize', 32],
-            ['filters', 3, 7, 11],
+            ['filters', 64, 128],
             # Dropout
             ['dropout', 0, 0.1, 0.3, 0.5],
             # DenseLayer
             ['denseLayer', 128, 256, 512],
             # Optimizer
-            ['optimizer', 'ADAM', 'RMSPROP']
+            ['optimizer', 'ADAM', 'ADADELTA', 'RMSPROP']
         ]
         b = list()
         for n in range(0, i):
