@@ -359,11 +359,11 @@ class TweetSentimentInceptionV2_3x3_Multi(TweetSentiment2DCNN2Channel):
 
         layer1 = self.get_inception_model(embeddings, filters, 1)
         layer2 = self.get_inception_model(layer1, filters, 2)
-        # layer3 = self.get_inception_model(layer2, filters)
-        # layer4 = self.get_inception_model(layer3, filters)
+        layer3 = self.get_inception_model(layer2, filters)
+        layer4 = self.get_inception_model(layer3, filters)
 
         # # Group all the layers
-        concat_layer = Concatenate(axis=-1)([layer1, layer2])
+        concat_layer = Concatenate(axis=-1)([layer1, layer2, layer3, layer4])
         final = Conv2D(filters*2, kernel_size=(1,1), strides=(1, 1), padding='same',
                                 activation='relu', name="CONV_final")(concat_layer)
 
