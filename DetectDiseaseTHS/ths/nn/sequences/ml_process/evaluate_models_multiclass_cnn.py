@@ -35,7 +35,7 @@ class EvaluateModelsMulticlassCNN(TweetsProcessor):
         # for combination in itertools.islice(params, 1500, 1728):  # -> 4th host
         # for combination in params:
             count_models += 1
-            self.nn = TweetSentimentInceptionV2(max_len, g)
+            self.nn = TweetSentimentInceptionV2_3x3(max_len, g)
             file_name = str(self.route_files) + "/model" + str(combination).replace(" ", "") + ".txt"
             log = open(file_name, "a+")
             start_time_comb = datetime.now()
@@ -46,7 +46,7 @@ class EvaluateModelsMulticlassCNN(TweetsProcessor):
             for e in range(0, self.num_params):
                 l[e] = combination[e]
 
-            self.nn.build(filters=l[3], dropout=l[4], dense_units=l[5], padding='valid')
+            self.nn.build(filters=l[3], dropout=l[4], dense_units=l[5])
             self.nn.summary()
 
             # Assign the parameters agree the optimizer to use
