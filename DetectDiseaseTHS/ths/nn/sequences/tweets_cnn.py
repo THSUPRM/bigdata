@@ -236,9 +236,8 @@ class TweetSentimentInceptionV2_5x5_Multi(TweetSentiment2DCNN2Channel):
 
         # # Group all the layers
         concat_layer = Concatenate(axis=-1)([layer1, layer2, layer3, layer4])
-        final = Conv2D(filters*2, kernel_size=(1,1), strides=(1, 1), padding='same',
-                                activation='relu', name="CONV_final")(concat_layer)
-
+        final = Conv2D(filters*2, kernel_size=(1,1), strides=(1, 1), padding='same', activation='relu',
+                       name="CONV_final")(concat_layer)
         # Flatten
         X = Flatten()(final)
         X = Dense(units=dense_units, activation='relu', name="DENSE_2")(X)
