@@ -29,10 +29,9 @@ class EvaluateModelsMulticlassCNN(TweetsProcessor):
         # params = [(0.03, 20, 32, 11, 0.3, 128, 'ADAM')]
 
         # for combination in itertools.islice(params, 0, 10):    # -> Basic test
-        for combination in itertools.islice(params, 0, 500):     # -> 1st host
-        # for combination in itertools.islice(params, 500, 1000):  # -> 2nd host
-        # for combination in itertools.islice(params, 1000, 1500):  # -> 3th host
-        # for combination in itertools.islice(params, 1500, 1728):  # -> 4th host
+        for combination in itertools.islice(params, 0, 360):     # -> 1st host
+        # for combination in itertools.islice(params, 360, 720):  # -> 2nd host
+        # for combination in itertools.islice(params, 720, 1080):  # -> 3th host
         # for combination in params:
             count_models += 1
             self.nn = TweetSentimentInceptionV2_3x3(max_len, g)
