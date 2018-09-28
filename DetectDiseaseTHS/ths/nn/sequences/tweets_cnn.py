@@ -162,7 +162,7 @@ class TweetSentimentInceptionV2_5x5(TweetSentiment2DCNN2Channel):
         embeddings_layer = self.pretrained_embedding_layer()
         embeddings = embeddings_layer(sentence_input)
         # Reshape
-        embeddings1 = Reshape((self.max_sentence_len, self.embedding_builder.get_dimensions(), 1))(embeddings)
+        embeddings = Reshape((self.max_sentence_len, self.embedding_builder.get_dimensions(), 1))(embeddings)
         final = self.get_inception_model(embeddings, filters, count=1, strides_level=2, n=5)
 
         # Flatten
