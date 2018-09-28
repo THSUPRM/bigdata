@@ -1,6 +1,6 @@
 import numpy as np
 from keras.models import Model
-from keras.layers import Dense, Input, Conv2D, MaxPooling2D, Flatten, Reshape, Concatenate, ZeroPadding2D
+from keras.layers import Dense, Input, Conv2D, MaxPooling2D, Flatten, Reshape, Concatenate, ZeroPadding2D, Dropout
 from keras.layers.embeddings import Embedding
 from abc import abstractmethod
 np.random.seed(7)
@@ -140,7 +140,11 @@ class TweetSentimentInceptionV2_3x3(TweetSentiment2DCNN2Channel):
 
         # Flatten
         X = Flatten()(final)
+
         X = Dense(units=dense_units, activation='relu', name="DENSE_2")(X)
+        # Dropout
+        X = Dropout(dropout, name="DROPOUT_1")(X)
+
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_3")(X)
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_4")(X)
 

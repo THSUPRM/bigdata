@@ -250,7 +250,7 @@ class TweetsProcessor:
     def get_hyper_matrix_cnn(self, i=1):
         a = [
             ['learningRate', 0.001, 0.003, 0.006, 0.008, 0.01],
-            ['epochs', 10, 20, 40, 60],
+            ['epochs', 10, 20, 40],
             ['batchSize', 32],
             ['filters', 64, 128],
             # Dropout
