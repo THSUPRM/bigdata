@@ -172,6 +172,9 @@ class TweetSentimentInceptionV2_5x5(TweetSentiment2DCNN2Channel):
         # Flatten
         X = Flatten()(final)
         X = Dense(units=dense_units, activation='relu', name="DENSE_2")(X)
+        # Dropout
+        X = Dropout(dropout, name="DROPOUT_1")(X)
+
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_3")(X)
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_4")(X)
 
@@ -209,6 +212,9 @@ class TweetSentimentInceptionV2_3x3_Multi(TweetSentiment2DCNN2Channel):
         # Flatten
         X = Flatten()(final)
         X = Dense(units=dense_units, activation='relu', name="DENSE_2")(X)
+        # Dropout
+        X = Dropout(dropout, name="DROPOUT_1")(X)
+
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_3")(X)
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_4")(X)
 
@@ -245,6 +251,8 @@ class TweetSentimentInceptionV2_5x5_Multi(TweetSentiment2DCNN2Channel):
         # Flatten
         X = Flatten()(final)
         X = Dense(units=dense_units, activation='relu', name="DENSE_2")(X)
+        # Dropout
+        X = Dropout(dropout, name="DROPOUT_1")(X)
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_3")(X)
         X = Dense(units=int(dense_units/2), activation='relu', name="DENSE_4")(X)
 
