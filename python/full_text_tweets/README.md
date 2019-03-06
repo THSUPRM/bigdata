@@ -4,7 +4,7 @@ In this folder is all code necessary to collect the Tweets from Twitter Streamin
 
 1.	Run “1.Producer_full_text.py” with this command: 
 “nohup spark-submit code/1.Producer_full_text.py > logs/logProducerFullText.out 2> logs/logProducerFullText.err &”
-2.	Run “2.Consumer_full_text.py” with this command:
+2.	Run “2_THSConsumerFullText_WithGeo.py” with this command:
 “nohup spark-submit code/2_THSConsumerFullText_WithGeo.py > logs/logConsumerFullText.out 2> logs/logConsumerFullText.err &”
 3.	Once the number of tweets are collected and saved table raw_tweet in hive, is necessary run “3.Save_data_from_raw_tweet_to_tables_Hive.py” with this command:
 “spark-submit code/3.Save_data_from_raw_tweet_to_tables_Hive.py”
